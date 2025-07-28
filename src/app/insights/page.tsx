@@ -28,6 +28,7 @@ import {
   Minus
 } from 'lucide-react';
 import '../../styles/insights.scss';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 interface TopConnection {
   id: string;
@@ -160,7 +161,8 @@ export default function InsightsPage() {
   };
 
   return (
-    <div className="insights-page">
+    <AuthenticatedLayout>
+      <div className="insights-page">
       <div className="insights-header">
         <div className="header-content">
           <h1 className="page-title">Analytics & Insights</h1>
@@ -422,6 +424,7 @@ export default function InsightsPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthenticatedLayout>
   );
 } 

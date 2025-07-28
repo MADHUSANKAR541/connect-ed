@@ -35,6 +35,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import '../../styles/profile.scss';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 interface Experience {
   id: number;
@@ -146,7 +147,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="profile-page">
+    <AuthenticatedLayout>
+      <div className="profile-page">
       <div className="profile-header">
         <div className="header-content">
           <h1 className="page-title">Profile</h1>
@@ -608,6 +610,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthenticatedLayout>
   );
 } 

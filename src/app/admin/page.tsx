@@ -26,6 +26,7 @@ import {
   Unlock
 } from 'lucide-react';
 import '../../styles/admin.scss';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'colleges' | 'settings'>('overview');
@@ -208,8 +209,9 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="admin-page">
-      <div className="admin-header">
+    <AuthenticatedLayout>
+      <div className="admin-page">
+        <div className="admin-header">
         <div className="header-content">
           <h1 className="page-title">Admin Dashboard</h1>
           <p className="page-subtitle">Manage users, colleges, and platform settings</p>
@@ -574,6 +576,7 @@ export default function AdminPage() {
           </motion.div>
         )}
       </div>
-    </div>
+      </div>
+    </AuthenticatedLayout>
   );
 } 

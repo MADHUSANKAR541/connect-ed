@@ -25,9 +25,7 @@ export default function SideHeaderWrapper() {
     '/dashboard/messages',
     '/dashboard/calls',
     '/dashboard/notifications',
-    '/dashboard/insights',
-    '/dashboard/settings',
-    '/profile'             // Profile page
+    '/dashboard/settings'
   ];
 
   // Check if current page should show side header
