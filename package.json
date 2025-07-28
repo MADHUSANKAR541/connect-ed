@@ -30,6 +30,7 @@
     "react-jitsi": "^1.0.4",
     "sass": "^1.89.2",
     "scss": "^0.2.4",
+    "supabase": "^2.31.8",
     "zod": "^4.0.10"
   },
   "devDependencies": {
