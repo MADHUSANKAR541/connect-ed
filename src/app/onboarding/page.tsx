@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, GraduationCap, MapPin, Calendar, Briefcase, Globe, Save } from 'lucide-react';
+import { User, GraduationCap, MapPin, Calendar, Briefcase, Globe, Save, Users, Shield } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import '../../styles/onboarding.scss';
 
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN'>('STUDENT');
   const [formData, setFormData] = useState({
     name: '',
     college: '',
@@ -20,6 +21,13 @@ export default function OnboardingPage() {
     linkedin: '',
     github: ''
   });
+
+  const roles = [
+    { id: 'STUDENT', label: 'Student', icon: GraduationCap },
+    { id: 'ALUMNI', label: 'Alumni', icon: Users },
+    { id: 'PROFESSOR', label: 'Professor', icon: Shield },
+    { id: 'ADMIN', label: 'Administrator', icon: Shield }
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -75,7 +83,8 @@ export default function OnboardingPage() {
           college: formData.college,
           department: formData.department,
           batch: formData.batch,
-          bio: formData.bio
+          bio: formData.bio,
+          role: selectedRole
         }),
       });
 
@@ -143,6 +152,25 @@ export default function OnboardingPage() {
                   onChange={handleInputChange}
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Role</label>
+                <div className="role-selector">
+                  {roles.map((role) => {
+                    const Icon = role.icon;
+                    return (
+                      <div
+                        key={role.id}
+                        className={`role-option ${selectedRole === role.id ? 'active' : ''}`}
+                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN')}
+                      >
+                        <Icon size={20} />
+                        <span>{role.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="form-group">

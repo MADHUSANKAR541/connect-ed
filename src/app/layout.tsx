@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Providers from '@/components/Providers';
 import SideHeaderWrapper from '@/components/SideHeaderWrapper';
+import RoleBasedRedirect from '@/components/RoleBasedRedirect';
 import './globals.scss';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,10 +21,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          <div className="app-container">
-            <SideHeaderWrapper />
-            {children}
-          </div>
+          <RoleBasedRedirect>
+            <div className="app-container">
+              <SideHeaderWrapper />
+              {children}
+            </div>
+          </RoleBasedRedirect>
         </Providers>
       </body>
     </html>

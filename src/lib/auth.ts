@@ -15,8 +15,8 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: 'STUDENT',
-          college_id: null, // Will be set during onboarding
+          role: '', // Will be set during onboarding
+          collegeId: "", // Will be set during onboarding
         };
       },
     }),
@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          college_id: user.college_id,
+          collegeId: user.college_id,
         };
       },
     }),
@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        token.college_id = user.college_id;
+        token.collegeId = user.collegeId;
       }
       return token;
     },
@@ -72,7 +72,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.sub!;
         session.user.role = token.role as string;
-        session.user.college_id = token.college_id as string;
+        session.user.collegeId = token.collegeId as string;
       }
       return session;
     },

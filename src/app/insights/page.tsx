@@ -29,6 +29,31 @@ import {
 } from 'lucide-react';
 import '../../styles/insights.scss';
 
+interface TopConnection {
+  id: string;
+  avatar: string;
+  name: string;
+  college: string;
+  role: string;
+  mutualConnections: number;
+  lastInteraction: string;
+  rating: number;
+}
+
+interface CollegeStat {
+  name: string;
+  connections: number;
+  views: number;
+  messages: number;
+  growth: string;
+}
+
+interface SkillTrend {
+  skill: string;
+  connections: number;
+  growth: string;
+}
+
 export default function InsightsPage() {
   const [timeRange, setTimeRange] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('connections');
@@ -79,9 +104,9 @@ export default function InsightsPage() {
   ];
 
   // Remove hardcoded demo data
-  const topConnections = [];
-  const collegeStats = [];
-  const skillTrends = [];
+  const topConnections: TopConnection[] = [];
+  const collegeStats: CollegeStat[] = [];
+  const skillTrends: SkillTrend[] = [];
 
   const recentActivity = [
     {
@@ -220,14 +245,17 @@ export default function InsightsPage() {
                 <h3>Activity Chart</h3>
                 <p>Visual representation of your {selectedMetric} over time</p>
                 <div className="chart-data">
-                  {activityData.map((day, index) => (
-                    <div key={index} className="data-point">
-                      <div className="data-bar" style={{ 
-                        height: `${(day[selectedMetric as keyof typeof day] / 70) * 100}%` 
-                      }}></div>
-                      <span className="data-label">{day.day}</span>
-                    </div>
-                  ))}
+                  {activityData.map((day, index) => {
+                    const value = day[selectedMetric as keyof typeof day] as number;
+                    return (
+                      <div key={index} className="data-point">
+                        <div className="data-bar" style={{ 
+                          height: `${(value / 70) * 100}%` 
+                        }}></div>
+                        <span className="data-label">{day.day}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

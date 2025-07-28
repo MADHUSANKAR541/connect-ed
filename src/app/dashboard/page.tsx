@@ -17,7 +17,12 @@ import '../../styles/dashboard-home.scss';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const [userData, setUserData] = useState(null);
+  type UserData = {
+    name?: string;
+    role?: string;
+    [key: string]: any;
+  };
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +38,11 @@ export default function DashboardPage() {
   }, [session]);
 
   const fetchUserData = async () => {
+    if (!session || !session.user || !session.user.id) {
+      console.log('No session or user ID available for fetchUserData');
+      setLoading(false);
+      return;
+    }
     try {
       console.log('Making API call to fetch user data...');
       const response = await fetch(`/api/profile?userId=${session.user.id}`);
@@ -73,8 +83,8 @@ export default function DashboardPage() {
     );
   }
 
-  const userName = userData?.name || session?.user?.name || 'User';
-  const userRole = userData?.role || session?.user?.role || 'Student';
+  const userName = (userData as UserData | null)?.name || session?.user?.name || 'User';
+  const userRole = (userData as UserData | null)?.role || session?.user?.role || 'Student';
 
   const stats = [
     { 

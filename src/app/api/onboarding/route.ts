@@ -6,9 +6,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Onboarding request body:', body);
     
-    const { userId, college, department, batch, bio } = body;
-    if (!userId || !college) {
-      console.log('Missing required fields:', { userId, college });
+    const { userId, college, department, batch, bio, role } = body;
+    if (!userId || !college || !role) {
+      console.log('Missing required fields:', { userId, college, role });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
         department,
         batch,
         bio,
+        role,
       })
       .eq('id', userId)
       .select()
