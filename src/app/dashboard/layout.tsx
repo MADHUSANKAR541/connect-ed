@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { 
   Home, 
   Users, 
@@ -67,7 +68,7 @@ export default function DashboardLayout({
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-btn icon-logout-btn" title="Logout">
+          <button className="logout-btn icon-logout-btn" title="Logout" onClick={() => signOut({ callbackUrl: '/auth' })}>
             <LogOut size={24} />
           </button>
         </div>

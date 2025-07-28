@@ -117,10 +117,6 @@ export default function LandingPage() {
                 Get Started
                 <ArrowRight size={20} />
               </button>
-              <button className="cta-btn secondary">
-                <Play size={20} />
-                Watch Demo
-              </button>
             </div>
           </motion.div>
           
