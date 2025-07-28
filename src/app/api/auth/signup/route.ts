@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         role,
         college_id: collegeRecord.id,
         department,
-        avatar: name.split(' ').map((n) => n[0]).join('').toUpperCase(),
+        avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
       })
       .select()
       .single();

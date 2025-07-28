@@ -8,33 +8,62 @@ import {
   X, 
   Eye, 
   EyeOff, 
-  Camera, 
-  MapPin, 
-  GraduationCap, 
-  Building2, 
+  Users, 
+  MessageSquare, 
   Calendar,
+  Calendar as CalendarIcon,
+  Plus,
+  Settings,
+  Award,
+  GraduationCap,
+  Briefcase,
+  Star,
+  MapPin,
+  Building2,
+  Globe,
+  Lock,
+  Bell,
   Mail,
   Phone,
-  Globe,
   Linkedin,
   Github,
   Twitter,
-  Lock,
-  Unlock,
-  Star,
-  Users,
-  MessageSquare,
-  Calendar as CalendarIcon,
-  Settings,
+  Instagram,
+  Camera,
   User,
-  Briefcase,
-  Award,
   BookOpen,
-  Plus,
-  Bell,
   UserPlus
 } from 'lucide-react';
 import '../../styles/profile.scss';
+
+interface Experience {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  duration: string;
+  description: string;
+  skills: string[];
+  isPublic: boolean;
+}
+
+interface Education {
+  id: number;
+  degree: string;
+  institution: string;
+  location: string;
+  duration: string;
+  gpa: string;
+  description: string;
+  achievements: string[];
+  isPublic: boolean;
+}
+
+interface Skill {
+  name: string;
+  level: string;
+  category: string;
+}
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -67,9 +96,9 @@ export default function ProfilePage() {
   };
 
   // Remove hardcoded experience, education, and skills
-  const experience = [];
-  const education = [];
-  const skills = [];
+  const experience: Experience[] = [] as Experience[];
+  const education: Education[] = [] as Education[];
+  const skills: Skill[] = [] as Skill[];
 
   const achievements = [
     {
@@ -189,7 +218,7 @@ export default function ProfilePage() {
                     <span>{user.department}</span>
                   </div>
                   <div className="meta-item">
-                    <Calendar size={16} />
+                    <CalendarIcon size={16} />
                     <span>Class of {user.batch}</span>
                   </div>
                   <div className="meta-item">
@@ -478,7 +507,7 @@ export default function ProfilePage() {
                   <div className="setting-card">
                     <div className="setting-header">
                       <div className="setting-icon">
-                        <Calendar size={20} />
+                        <CalendarIcon size={20} />
                       </div>
                       <div className="setting-info">
                         <h3>Call Requests</h3>
@@ -548,7 +577,7 @@ export default function ProfilePage() {
                 <span>Send Message</span>
               </button>
               <button className="action-btn">
-                <Calendar size={16} />
+                <CalendarIcon size={16} />
                 <span>Schedule Call</span>
               </button>
               <button className="action-btn">
