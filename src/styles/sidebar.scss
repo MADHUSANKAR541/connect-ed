@@ -1,0 +1,355 @@
+/* Dashboard Sidebar Styles */
+
+/* Icon-only sidebar */
+.dashboard-layout .icon-sidebar {
+  width: 80px;
+  align-items: center;
+  padding: 0;
+  overflow: visible; /* Allow tooltips to overflow */
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+/* Static sidebar - always visible */
+.dashboard-layout .static-sidebar {
+  transform: none !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+}
+
+[data-theme="dark"] .dashboard-layout .sidebar {
+  background: rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .dashboard-layout .sidebar {
+  background: rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Remove the open class since sidebar is always visible */
+.dashboard-layout .sidebar.open {
+  transform: none !important;
+}
+
+.sidebar-header {
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.icon-sidebar .sidebar-header {
+  padding: 24px 0;
+  justify-content: center;
+  border-bottom: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.icon-sidebar .logo {
+  font-size: 24px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  color: var(--muted-foreground);
+}
+
+.close-btn:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.nav {
+  flex: 1;
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.icon-sidebar .nav {
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  flex: 1;
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  border-left: 3px solid transparent;
+}
+
+.icon-nav-item {
+  position: relative;
+  padding: 4px;
+  border-radius: 4px;
+  border-left: none;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0; /* Prevent shrinking */
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+
+
+.icon-nav-item:hover {
+  background: var(--accent);
+  color: var(--foreground);
+  transform: scale(1.05);
+}
+
+.nav-item:hover {
+  background: var(--accent);
+  color: var(--foreground);
+  border-left-color: var(--primary);
+}
+
+.nav-item.active {
+  background: var(--accent);
+  color: var(--primary);
+  border-left-color: var(--primary);
+}
+
+.icon-nav-item.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-left: none;
+}
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.icon-sidebar .sidebar-footer {
+  padding: 24px 0;
+  border-top: none;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: var(--destructive);
+}
+
+.icon-logout-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border-radius: 4px;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+
+
+.icon-logout-btn:hover {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  transform: scale(1.05);
+}
+
+.logout-btn:hover {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-layout .icon-sidebar {
+    width: 60px;
+  }
+  
+  .icon-nav-item,
+  .icon-logout-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .icon-nav-item svg,
+  .icon-logout-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    width: 100%;
+    max-width: 320px;
+  }
+  
+  .sidebar-header {
+    padding: 20px;
+  }
+  
+  .nav {
+    padding: 20px 0;
+  }
+  
+  .nav-item {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+  
+  .nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+  }
+  
+  .logout-btn {
+    padding: 16px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+  }
+  
+  .sidebar-header {
+    padding: 16px;
+  }
+  
+  .logo {
+    font-size: 18px;
+  }
+  
+  .nav-item {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+  
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .sidebar-footer {
+    padding: 16px;
+  }
+  
+  .logout-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar {
+    overflow-y: auto;
+  }
+  
+  .sidebar-header {
+    padding: 12px 24px;
+  }
+  
+  .nav {
+    padding: 12px 0;
+  }
+  
+  .nav-item {
+    padding: 8px 24px;
+  }
+  
+  .sidebar-footer {
+    padding: 12px 24px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .sidebar {
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+  
+  .nav-item {
+    transition: none;
+  }
+  
+  .logout-btn {
+    transition: none;
+  }
+}
+
+/* Dark mode adjustments for OLED screens */
+@media (prefers-color-scheme: dark) {
+  [data-theme="dark"] .sidebar {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar {
+    display: none;
+  }
+} 
