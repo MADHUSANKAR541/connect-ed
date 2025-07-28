@@ -19,6 +19,15 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
       const userRole = session.user.role;
       const currentPath = window.location.pathname;
 
+      // If user is not verified, redirect to wait-for-approval page
+      if ('is_verified' in session.user) {
+        const isVerified = (session.user as any).is_verified;
+        if (!isVerified && currentPath !== '/wait-for-approval') {
+          router.push('/wait-for-approval');
+          return;
+        }
+      }
+
       // Define role-specific routes
       const roleRoutes = {
         'STUDENT': '/dashboard',

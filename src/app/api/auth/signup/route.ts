@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         college_id: collegeRecord.id,
         department,
         avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        is_verified: false, // Always set to false for new users
       })
       .select()
       .single();

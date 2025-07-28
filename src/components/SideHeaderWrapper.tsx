@@ -19,6 +19,7 @@ export default function SideHeaderWrapper() {
     '/login',              // Login
     '/register',           // Register
     '/onboarding',         // Onboarding (optional - can be included if needed)
+    '/admin',              // Admin page
     '/dashboard',          // Dashboard pages
     '/dashboard/connections',
     '/dashboard/explore',

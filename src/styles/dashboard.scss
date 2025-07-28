@@ -139,7 +139,8 @@
     transform: translateX(0);
   }
   
-  .main-content {
+  /* Only apply 280px margin for full sidebars, not icon sidebars */
+  .dashboard-layout .sidebar:not(.icon-sidebar) + .main-content {
     margin-left: 280px;
   }
   
