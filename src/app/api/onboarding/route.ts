@@ -6,7 +6,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Onboarding request body:', body);
     
-    const { userId, college, department, batch, bio, role } = body;
+    const { 
+      userId, 
+      college, 
+      department, 
+      bio, 
+      role,
+      linkedin,
+      github,
+      // Student-specific fields
+      currentYear,
+      graduationYear,
+      cgpa,
+      // Alumni-specific fields
+      currentCompany,
+      jobTitle,
+      experienceYears,
+      // Professor-specific fields
+      designation,
+      teachingExperience,
+      researchAreas,
+      publications
+    } = body;
+    
     if (!userId || !college || !role) {
       console.log('Missing required fields:', { userId, college, role });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -47,17 +69,38 @@ export async function POST(request: NextRequest) {
       collegeRecord = newCollege;
     }
     
-    console.log('Updating user:', userId, 'with college_id:', collegeRecord.id);
+    // Prepare user update data with role-specific fields
+    const userUpdateData: any = {
+      college_id: collegeRecord.id,
+      department,
+      bio,
+      role,
+      linkedin: linkedin || null,
+      github: github || null,
+    };
+
+    // Add role-specific fields
+    if (role === 'STUDENT') {
+      userUpdateData.current_year = currentYear;
+      userUpdateData.graduation_year = graduationYear;
+      userUpdateData.cgpa = cgpa;
+    } else if (role === 'ALUMNI') {
+      userUpdateData.graduation_year = graduationYear;
+      userUpdateData.current_company = currentCompany;
+      userUpdateData.job_title = jobTitle;
+      userUpdateData.experience_years = experienceYears;
+    } else if (role === 'PROFESSOR') {
+      userUpdateData.designation = designation;
+      userUpdateData.teaching_experience = teachingExperience;
+      userUpdateData.research_areas = researchAreas;
+      userUpdateData.publications = publications;
+    }
+    
+    console.log('Updating user:', userId, 'with data:', userUpdateData);
     // Update user profile
     const { data: user, error: updateError } = await supabase
       .from('users')
-      .update({
-        college_id: collegeRecord.id,
-        department,
-        batch,
-        bio,
-        role,
-      })
+      .update(userUpdateData)
       .eq('id', userId)
       .select()
       .single();

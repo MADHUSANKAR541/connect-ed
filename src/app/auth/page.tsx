@@ -10,7 +10,7 @@ import '../../styles/auth.scss';
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN'>('STUDENT');
+  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR'>('STUDENT');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -31,6 +31,14 @@ export default function AuthPage() {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
+
+  const handleTabChange = (tab: 'login' | 'signup') => {
+    setActiveTab(tab);
+    // Update URL with the new tab
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    router.replace(url.pathname + url.search, { scroll: false });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -85,7 +93,7 @@ export default function AuthPage() {
           if (result?.error) {
             setError('Account created but login failed');
           } else {
-            router.push('/onboarding');
+            router.push('/wait-for-approval');
           }
         }
       }
@@ -99,7 +107,9 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/onboarding' });
+      // For Google sign-in, let the RoleBasedRedirect handle the routing
+      // based on whether the user is new or existing
+      await signIn('google', { callbackUrl: '/dashboard' });
     } catch (error) {
       setError('Google sign-in failed');
       setLoading(false);
@@ -109,8 +119,7 @@ export default function AuthPage() {
   const roles = [
     { id: 'STUDENT', label: 'Student', icon: GraduationCap },
     { id: 'ALUMNI', label: 'Alumni', icon: Users },
-    { id: 'PROFESSOR', label: 'Professor', icon: Shield },
-    { id: 'ADMIN', label: 'Administrator', icon: Shield }
+    { id: 'PROFESSOR', label: 'Professor', icon: Shield }
   ];
 
   return (
@@ -127,13 +136,13 @@ export default function AuthPage() {
         <div className="tab-container">
           <div 
             className={`tab ${activeTab === 'login' ? 'active' : ''}`}
-            onClick={() => setActiveTab('login')}
+            onClick={() => handleTabChange('login')}
           >
             Login
           </div>
           <div 
             className={`tab ${activeTab === 'signup' ? 'active' : ''}`}
-            onClick={() => setActiveTab('signup')}
+            onClick={() => handleTabChange('signup')}
           >
             Sign Up
           </div>
@@ -173,7 +182,7 @@ export default function AuthPage() {
                       <div
                         key={role.id}
                         className={`role-option ${selectedRole === role.id ? 'active' : ''}`}
-                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN')}
+                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR')}
                       >
                         <Icon size={20} />
                         <span>{role.label}</span>

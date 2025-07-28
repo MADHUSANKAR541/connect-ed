@@ -9,7 +9,7 @@ import '../../styles/onboarding.scss';
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN'>('STUDENT');
+  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR'>('STUDENT');
   const [formData, setFormData] = useState({
     name: '',
     college: '',
@@ -19,17 +19,29 @@ export default function OnboardingPage() {
     interests: '',
     bio: '',
     linkedin: '',
-    github: ''
+    github: '',
+    // Student-specific fields
+    currentYear: '',
+    graduationYear: '',
+    cgpa: '',
+    // Alumni-specific fields
+    currentCompany: '',
+    jobTitle: '',
+    experienceYears: '',
+    // Professor-specific fields
+    designation: '',
+    teachingExperience: '',
+    researchAreas: '',
+    publications: ''
   });
 
   const roles = [
     { id: 'STUDENT', label: 'Student', icon: GraduationCap },
     { id: 'ALUMNI', label: 'Alumni', icon: Users },
-    { id: 'PROFESSOR', label: 'Professor', icon: Shield },
-    { id: 'ADMIN', label: 'Administrator', icon: Shield }
+    { id: 'PROFESSOR', label: 'Professor', icon: Shield }
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -64,9 +76,20 @@ export default function OnboardingPage() {
       return;
     }
     
-    if (currentStep === 2 && !formData.batch) {
-      alert('Please fill in the batch year in step 2');
-      return;
+    if (currentStep === 2) {
+      // Role-specific validation
+      if (selectedRole === 'STUDENT' && (!formData.currentYear || !formData.graduationYear)) {
+        alert('Please fill in your current year and expected graduation year');
+        return;
+      }
+      if (selectedRole === 'ALUMNI' && (!formData.graduationYear || !formData.currentCompany || !formData.jobTitle || !formData.experienceYears)) {
+        alert('Please fill in all required alumni fields');
+        return;
+      }
+      if (selectedRole === 'PROFESSOR' && (!formData.designation || !formData.teachingExperience || !formData.researchAreas)) {
+        alert('Please fill in all required professor fields');
+        return;
+      }
     }
     
     // Only submit if we're on the final step
@@ -82,9 +105,23 @@ export default function OnboardingPage() {
           userId: session.user.id,
           college: formData.college,
           department: formData.department,
-          batch: formData.batch,
           bio: formData.bio,
-          role: selectedRole
+          role: selectedRole,
+          linkedin: formData.linkedin,
+          github: formData.github,
+          // Student-specific fields
+          currentYear: formData.currentYear,
+          graduationYear: formData.graduationYear,
+          cgpa: formData.cgpa,
+          // Alumni-specific fields
+          currentCompany: formData.currentCompany,
+          jobTitle: formData.jobTitle,
+          experienceYears: formData.experienceYears,
+          // Professor-specific fields
+          designation: formData.designation,
+          teachingExperience: formData.teachingExperience,
+          researchAreas: formData.researchAreas,
+          publications: formData.publications
         }),
       });
 
@@ -163,7 +200,7 @@ export default function OnboardingPage() {
                       <div
                         key={role.id}
                         className={`role-option ${selectedRole === role.id ? 'active' : ''}`}
-                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN')}
+                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR')}
                       >
                         <Icon size={20} />
                         <span>{role.label}</span>
@@ -208,42 +245,229 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -20 }}
               className="step-content"
             >
-              <div className="form-group">
-                <label className="form-label">Batch Year</label>
-                <input
-                  type="text"
-                  name="batch"
-                  className="form-input"
-                  placeholder="e.g., 2023, 2024"
-                  value={formData.batch}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
+              {/* Student-specific questions */}
+              {selectedRole === 'STUDENT' && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Current Year</label>
+                    <select
+                      name="currentYear"
+                      className="form-input"
+                      value={formData.currentYear || ''}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select your current year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                      <option value="5">5th Year</option>
+                    </select>
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Skills</label>
-                <input
-                  type="text"
-                  name="skills"
-                  className="form-input"
-                  placeholder="e.g., React, Python, Machine Learning"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                />
-              </div>
+                  <div className="form-group">
+                    <label className="form-label">Expected Graduation Year</label>
+                    <input
+                      type="text"
+                      name="graduationYear"
+                      className="form-input"
+                      placeholder="e.g., 2026, 2027"
+                      value={formData.graduationYear || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Interests</label>
-                <input
-                  type="text"
-                  name="interests"
-                  className="form-input"
-                  placeholder="e.g., AI, Web Development, Research"
-                  value={formData.interests}
-                  onChange={handleInputChange}
-                />
-              </div>
+                  <div className="form-group">
+                    <label className="form-label">CGPA</label>
+                    <input
+                      type="text"
+                      name="cgpa"
+                      className="form-input"
+                      placeholder="e.g., 8.5, 9.2"
+                      value={formData.cgpa || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Skills (Technical & Soft Skills)</label>
+                    <input
+                      type="text"
+                      name="skills"
+                      className="form-input"
+                      placeholder="e.g., React, Python, Leadership, Communication"
+                      value={formData.skills}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Career Interests</label>
+                    <input
+                      type="text"
+                      name="interests"
+                      className="form-input"
+                      placeholder="e.g., Software Development, Data Science, Research"
+                      value={formData.interests}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Alumni-specific questions */}
+              {selectedRole === 'ALUMNI' && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Graduation Year</label>
+                    <input
+                      type="text"
+                      name="graduationYear"
+                      className="form-input"
+                      placeholder="e.g., 2020, 2021"
+                      value={formData.graduationYear || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Current Company</label>
+                    <input
+                      type="text"
+                      name="currentCompany"
+                      className="form-input"
+                      placeholder="e.g., Google, Microsoft, Self-employed"
+                      value={formData.currentCompany || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Job Title</label>
+                    <input
+                      type="text"
+                      name="jobTitle"
+                      className="form-input"
+                      placeholder="e.g., Software Engineer, Data Scientist, Entrepreneur"
+                      value={formData.jobTitle || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Years of Experience</label>
+                    <select
+                      name="experienceYears"
+                      className="form-input"
+                      value={formData.experienceYears || ''}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select years of experience</option>
+                      <option value="0-1">0-1 years</option>
+                      <option value="2-3">2-3 years</option>
+                      <option value="4-5">4-5 years</option>
+                      <option value="6-10">6-10 years</option>
+                      <option value="10+">10+ years</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Skills & Expertise</label>
+                    <input
+                      type="text"
+                      name="skills"
+                      className="form-input"
+                      placeholder="e.g., Full-stack Development, Machine Learning, Project Management"
+                      value={formData.skills}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Professor-specific questions */}
+              {selectedRole === 'PROFESSOR' && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Designation</label>
+                    <select
+                      name="designation"
+                      className="form-input"
+                      value={formData.designation || ''}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select your designation</option>
+                      <option value="Assistant Professor">Assistant Professor</option>
+                      <option value="Associate Professor">Associate Professor</option>
+                      <option value="Professor">Professor</option>
+                      <option value="Head of Department">Head of Department</option>
+                      <option value="Dean">Dean</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Years of Teaching Experience</label>
+                    <select
+                      name="teachingExperience"
+                      className="form-input"
+                      value={formData.teachingExperience || ''}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select years of teaching experience</option>
+                      <option value="0-2">0-2 years</option>
+                      <option value="3-5">3-5 years</option>
+                      <option value="6-10">6-10 years</option>
+                      <option value="11-15">11-15 years</option>
+                      <option value="15+">15+ years</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Research Areas</label>
+                    <input
+                      type="text"
+                      name="researchAreas"
+                      className="form-input"
+                      placeholder="e.g., Artificial Intelligence, Computer Networks, Data Science"
+                      value={formData.researchAreas || ''}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Publications</label>
+                    <input
+                      type="text"
+                      name="publications"
+                      className="form-input"
+                      placeholder="e.g., 15 research papers, 3 books, 5 patents"
+                      value={formData.publications || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Areas of Expertise</label>
+                    <input
+                      type="text"
+                      name="skills"
+                      className="form-input"
+                      placeholder="e.g., Machine Learning, Computer Vision, Academic Writing"
+                      value={formData.skills}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 

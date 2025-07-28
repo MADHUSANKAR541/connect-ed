@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
     const collegeId = searchParams.get('collegeId');
+    const status = searchParams.get('status');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -35,6 +36,14 @@ export async function GET(request: NextRequest) {
 
     if (collegeId && collegeId !== 'all') {
       query = query.eq('college_id', collegeId);
+    }
+
+    if (status) {
+      if (status === 'pending') {
+        query = query.eq('is_verified', false);
+      } else if (status === 'verified') {
+        query = query.eq('is_verified', true);
+      }
     }
 
     if (search) {

@@ -9,6 +9,7 @@ declare module 'next-auth' {
       image?: string | null;
       role: string;
       collegeId: string;
+      isVerified: boolean;
     };
   }
 
@@ -18,6 +19,7 @@ declare module 'next-auth' {
     email: string;
     role: string;
     collegeId: string;
+    isVerified: boolean;
   }
 }
 
@@ -25,5 +27,6 @@ declare module 'next-auth/jwt' {
   interface JWT {
     role: string;
     collegeId: string;
+    isVerified: boolean;
   }
 } 

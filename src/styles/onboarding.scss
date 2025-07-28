@@ -268,4 +268,57 @@
   color: #171717;
 }
 
- 
+// Role selector styles
+.role-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+[data-theme="dark"] .role-option {
+  border-color: #3f3f46;
+  color: #a1a1aa;
+}
+
+[data-theme="light"] .role-option {
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+.role-option:hover {
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .role-option:hover {
+  background: #2d2d2d;
+  color: white;
+}
+
+[data-theme="light"] .role-option:hover {
+  background: #f1f5f9;
+  color: #171717;
+}
+
+.role-option.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border-color: #6366f1;
+}
+
+.role-option span {
+  font-size: 12px;
+  font-weight: 500;
+}

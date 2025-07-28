@@ -17,16 +17,8 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
 
     if (status === 'authenticated' && session?.user?.role) {
       const userRole = session.user.role;
+      const isVerified = session.user.isVerified;
       const currentPath = window.location.pathname;
-
-      // If user is not verified, redirect to wait-for-approval page
-      if ('is_verified' in session.user) {
-        const isVerified = (session.user as any).is_verified;
-        if (!isVerified && currentPath !== '/wait-for-approval') {
-          router.push('/wait-for-approval');
-          return;
-        }
-      }
 
       // Define role-specific routes
       const roleRoutes = {
@@ -40,7 +32,18 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
 
       // If user is on the auth page and authenticated, redirect to their role-specific route
       if (currentPath === '/auth' || currentPath === '/') {
-        router.push(defaultRoute);
+        // Check if user is new (not verified) and redirect accordingly
+        if (!isVerified) {
+          router.push('/wait-for-approval');
+        } else {
+          router.push(defaultRoute);
+        }
+      }
+
+      // If user is verified but hasn't completed onboarding, redirect to onboarding
+      if (isVerified && currentPath === '/wait-for-approval') {
+        router.push('/onboarding');
+        return;
       }
 
       // If user is trying to access admin page but is not admin, redirect to dashboard
