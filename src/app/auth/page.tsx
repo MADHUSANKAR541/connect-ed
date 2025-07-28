@@ -10,7 +10,7 @@ import '../../styles/auth.scss';
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR'>('STUDENT');
+  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN'>('STUDENT');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -109,7 +109,8 @@ export default function AuthPage() {
   const roles = [
     { id: 'STUDENT', label: 'Student', icon: GraduationCap },
     { id: 'ALUMNI', label: 'Alumni', icon: Users },
-    { id: 'PROFESSOR', label: 'Professor', icon: Shield }
+    { id: 'PROFESSOR', label: 'Professor', icon: Shield },
+    { id: 'ADMIN', label: 'Administrator', icon: Shield }
   ];
 
   return (
@@ -172,7 +173,7 @@ export default function AuthPage() {
                       <div
                         key={role.id}
                         className={`role-option ${selectedRole === role.id ? 'active' : ''}`}
-                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR')}
+                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR' | 'ADMIN')}
                       >
                         <Icon size={20} />
                         <span>{role.label}</span>

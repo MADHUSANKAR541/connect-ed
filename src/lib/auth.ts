@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: 'STUDENT',
+          role: '', // Will be set during onboarding
           collegeId: "", // Will be set during onboarding
         };
       },
