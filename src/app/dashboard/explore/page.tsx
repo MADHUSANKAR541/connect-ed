@@ -18,9 +18,12 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import '../../../styles/explore.scss';
+import { useSession } from 'next-auth/react';
+import styles from './page.module.scss';
 
 interface User {
   id: string;
@@ -62,7 +65,85 @@ export default function ExplorePage() {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [connectMessage, setConnectMessage] = useState('');
+  const { data: session } = useSession();
+  const [alumniRecs, setAlumniRecs] = useState<any>(null);
+  const [alumniLoading, setAlumniLoading] = useState(false);
+  const [alumniError, setAlumniError] = useState<string | null>(null);
 
+  // AI Recommendation Modal State
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showAiModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAiModal]);
+
+  // Function to clean AI output by removing asterisks
+  const cleanAiOutput = (text: string) => {
+    return text
+      .replace(/\*\*/g, '') // Remove markdown bold
+      .replace(/\*/g, '') // Remove markdown asterisks
+      .replace(/`/g, '') // Remove backticks
+      .replace(/#{1,6}\s/g, '') // Remove markdown headers
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links
+      .replace(/^\s*[-*+]\s/gm, '') // Remove markdown list markers
+      .replace(/^\s*\d+\.\s/gm, '') // Remove numbered list markers
+      .trim();
+  };
+
+  const formatUsernames = (text: string) => {
+    // Pattern to match names (words that start with capital letters, likely followed by more words)
+    // This will match patterns like "Madhu Sankar", "Test User", "Kavinmathi V", etc.
+    return text.replace(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g, '<strong>$1</strong>');
+  };
+
+  // Function to get AI recommendation
+  const getAiRecommendation = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    setAiRecommendation('');
+    
+    try {
+      // Use the current search context to generate recommendation
+      const context = {
+        query: searchQuery,
+        role: selectedRole,
+        college: selectedCollege,
+        skills: selectedSkills
+      };
+      
+      const response = await fetch('http://localhost:8000/alumni-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          query: `Based on search for: ${searchQuery || 'general networking'}, role: ${selectedRole}, college: ${selectedCollege}, skills: ${selectedSkills.join(', ')}. Provide personalized networking and connection recommendations.`
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to get AI recommendation');
+      
+      const data = await response.json();
+      setAiRecommendation(cleanAiOutput(data.recommendation || 'No recommendation available.'));
+    } catch (err: any) {
+      setAiError(err.message || 'Failed to get AI recommendation');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
 
   const colleges = [
@@ -155,6 +236,34 @@ export default function ExplorePage() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, selectedRole, selectedCollege, selectedSkills, sortBy]);
+
+  useEffect(() => {
+    // Try to use user's domain/interest for recommendations
+    // Fallback to a generic query if not available
+    const userDomain = (session?.user && 'domain' in session.user && (session.user as any).domain) ? (session.user as any).domain : 'engineering';
+    if (!userDomain) return;
+    setAlumniLoading(true);
+    setAlumniRecs(null);
+    setAlumniError(null);
+    const fetchRecs = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('query', userDomain);
+        const res = await fetch('http://localhost:8000/alumni-referral', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Failed to get alumni recommendations');
+        const data = await res.json();
+        setAlumniRecs(data);
+      } catch (err: any) {
+        setAlumniError(err.message || 'Something went wrong');
+      } finally {
+        setAlumniLoading(false);
+      }
+    };
+    fetchRecs();
+  }, [session?.user]);
 
   const handleSkillToggle = (skill: string) => {
     setSelectedSkills(prev => 
@@ -262,6 +371,17 @@ export default function ExplorePage() {
               </option>
             ))}
           </select>
+          
+          <button 
+            className="ai-recommendation-btn"
+            onClick={() => {
+              setShowAiModal(true);
+              getAiRecommendation();
+            }}
+          >
+            <Sparkles size={16} />
+            Get AI Recommendation
+          </button>
         </div>
       </div>
 
@@ -408,13 +528,11 @@ export default function ExplorePage() {
                     </div>
                   )}
                 </div>
-                                  <div className="user-rating">
-                    <Star size={16} />
-                    <span>{user.rating || 0}</span>
-                  </div>
+                <div className="user-rating">
+                  <Star size={16} />
+                  <span>{user.rating || 0}</span>
+                </div>
               </div>
-
-
 
               <div className="user-skills">
                 {(user.skills || []).slice(0, 3).map(skill => (
@@ -429,16 +547,16 @@ export default function ExplorePage() {
                 )}
               </div>
 
-                              <div className="user-stats">
-                  <div className="stat">
-                    <Users size={14} />
-                    <span>{user.connections || 0} connections</span>
-                  </div>
-                  <div className="stat">
-                    <GraduationCap size={14} />
-                    <span>{user.batch || 'N/A'}</span>
-                  </div>
+              <div className="user-stats">
+                <div className="stat">
+                  <Users size={14} />
+                  <span>{user.connections || 0} connections</span>
                 </div>
+                <div className="stat">
+                  <GraduationCap size={14} />
+                  <span>{user.batch || 'N/A'}</span>
+                </div>
+              </div>
 
               <div className="user-actions">
                 <button 
@@ -495,6 +613,23 @@ export default function ExplorePage() {
         )}
       </div>
 
+      {/* Alumni Recommendations */}
+      <div className={styles['alumni-recommendations']}>
+        <h2>Alumni Recommendations</h2>
+        {alumniLoading && <div>Loading recommendations...</div>}
+        {alumniError && <div className={styles.error}>{alumniError}</div>}
+        {alumniRecs && (
+          <div>
+            <div style={{ whiteSpace: 'pre-wrap', marginBottom: 8 }}>{alumniRecs.recommendation}</div>
+            <ul>
+              {alumniRecs.retrieved_alumni?.map((al: string, idx: number) => (
+                <li key={idx}>{al}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       {/* Connection Modal */}
       {showConnectModal && selectedUser && (
         <div className="modal-overlay" onClick={() => setShowConnectModal(false)}>
@@ -513,10 +648,10 @@ export default function ExplorePage() {
                 <div className="user-avatar">
                   <span>{selectedUser.avatar}</span>
                 </div>
-                                  <div className="user-info">
-                    <h4>{selectedUser.name}</h4>
-                    <p>{selectedUser.role} • {selectedUser.college}</p>
-                  </div>
+                <div className="user-info">
+                  <h4>{selectedUser.name}</h4>
+                  <p>{selectedUser.role} • {selectedUser.college}</p>
+                </div>
               </div>
               <div className="message-section">
                 <label htmlFor="connect-message">Message (optional):</label>
@@ -546,6 +681,96 @@ export default function ExplorePage() {
           </div>
         </div>
       )}
+
+      {/* AI Recommendation Modal */}
+      {showAiModal && (
+        <div className="modal-overlay" onClick={() => setShowAiModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <Sparkles size={20} />
+                AI Networking Recommendation
+              </h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowAiModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="ai-recommendation-content">
+                {aiLoading && (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Loader2 size={32} className="spinner" />
+                    <p style={{ marginTop: '16px', color: '#6b7280' }}>
+                      Generating personalized recommendation...
+                    </p>
+                  </div>
+                )}
+                {aiError && (
+                  <div className={styles.error}>
+                    <span>⚠️</span>
+                    {aiError}
+                  </div>
+                )}
+                {aiRecommendation && (
+                  <div className="recommendation-text">
+                    <div className="sparkles-icon">
+                      <Sparkles size={20} />
+                      <span>AI Recommendation</span>
+                    </div>
+                    <div style={{ 
+                      maxHeight: 'none', 
+                      overflow: 'visible',
+                      width: '100%'
+                    }}>
+                      <p style={{
+                        fontSize: '15px',
+                        lineHeight: '1.7',
+                        color: '#1f2937',
+                        margin: '0',
+                        padding: '16px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '12px',
+                        borderLeft: '4px solid #3b82f6',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        maxHeight: 'calc(75vh - 250px)', // Ensure it doesn't exceed viewport
+                        overflowY: 'auto' // Allow scrolling within the paragraph if needed
+                      }}
+                      dangerouslySetInnerHTML={{ __html: formatUsernames(aiRecommendation) }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {!aiLoading && !aiError && !aiRecommendation && (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                    <Sparkles size={32} style={{ marginBottom: '16px' }} />
+                    <p>Click "Get New Recommendation" to start</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowAiModal(false)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={getAiRecommendation}
+                disabled={aiLoading}
+              >
+                {aiLoading ? 'Generating...' : 'Get New Recommendation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

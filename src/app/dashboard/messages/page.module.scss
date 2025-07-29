@@ -393,6 +393,23 @@
   cursor: not-allowed;
 }
 
+.toxicity-feedback {
+  margin-top: 4px;
+  font-size: 13px;
+  &.toxic {
+    color: #e11d48;
+  }
+  &.nontoxic {
+    color: #059669;
+  }
+}
+// Ensure send button disabled state is visually clear
+.send-btn[disabled], .modern-send-btn[disabled] {
+  background: #b6c3d1 !important;
+  color: #fff !important;
+  cursor: not-allowed !important;
+}
+
 /* No Chat Selected */
 .no-chat-selected {
   flex: 1;
