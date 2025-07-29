@@ -133,6 +133,7 @@ export default function LandingPage() {
             <div className="hero-actions">
               <Link href="/auth" className="btn btn-primary">
                 Get Started
+                <ArrowRight size={18} />
               </Link>
               <Link href="#features" className="btn btn-outline">
                 Learn More
@@ -159,7 +160,7 @@ export default function LandingPage() {
                 <div className="mockup-card">
                   <div className="mockup-avatar">JD</div>
                   <div className="mockup-info">
-                    <h4>John Doe</h4>
+                    <h4>Madhu</h4>
                     <p>Student • Computer Science</p>
                   </div>
                 </div>

@@ -243,7 +243,7 @@
 }
 
 .hero-subtitle {
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.6;
   margin-bottom: 40px;
   color: var(--foreground);
@@ -1392,7 +1392,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   padding: 12px 24px;
   font-size: 16px;
   font-weight: 600;
@@ -1403,6 +1403,15 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   min-width: 120px;
+  line-height: 1;
+}
+
+.btn svg {
+  flex-shrink: 0;
+  margin-top: 0;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 
 .btn-primary {

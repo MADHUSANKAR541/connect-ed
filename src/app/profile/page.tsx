@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import { 
   Edit, 
   Save, 
@@ -66,33 +67,79 @@ interface Skill {
 }
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'experience' | 'education' | 'settings'>('overview');
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const user = {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@mit.edu',
-    avatar: 'JD',
-    role: 'Student',
-    college: 'MIT',
-    department: 'Computer Science',
+  // Fetch user data and track profile views
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        // Fetch user profile data
+        const profileResponse = await fetch(`/api/profile`);
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          setUserData(profileData.user);
+          
+          // Track profile view (increment the view count)
+          await fetch('/api/profile/views', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              profileUserId: session.user.id
+            })
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [session]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <div className="loading">Loading profile...</div>
+      </div>
+    );
+  }
+
+  // Use real user data or fallback to mock data
+  const user = userData || {
+    id: session?.user?.id || 1,
+    name: session?.user?.name || 'User',
+    email: session?.user?.email || 'user@example.com',
+    avatar: session?.user?.name?.charAt(0) || 'U',
+    role: session?.user?.role || 'Student',
+    college: 'Unknown College',
+    department: 'Unknown Department',
     batch: '2024',
-    location: 'Cambridge, MA',
-    bio: 'Passionate computer science student with a keen interest in artificial intelligence and machine learning. Currently working on research projects in natural language processing.',
-    phone: '+1 (555) 123-4567',
-    website: 'https://johndoe.dev',
-    linkedin: 'https://linkedin.com/in/johndoe',
-    github: 'https://github.com/johndoe',
-    twitter: '@johndoe',
-    rating: 4.8,
-    connections: 156,
-    profileViews: 234,
-    isVerified: true,
-    isOnline: true,
-    joined: '2023-09-01',
-    lastActive: '2 minutes ago'
+    location: 'Unknown Location',
+    bio: 'No bio available',
+    phone: '',
+    website: '',
+    linkedin: '',
+    github: '',
+    twitter: '',
+    rating: 0,
+    connections: 0,
+    profileViews: 0,
+    isVerified: false,
+    isOnline: false,
+    joined: new Date().toISOString().split('T')[0],
+    lastActive: 'Unknown'
   };
 
   // Remove hardcoded experience, education, and skills

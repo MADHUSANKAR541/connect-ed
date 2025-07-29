@@ -21,7 +21,7 @@ import {
 import "../../styles/dashboard.scss";
 import "../../styles/sidebar.scss";
 
-export default function DashboardLayout({
+export default function ProfileLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -147,4 +147,4 @@ export default function DashboardLayout({
       </div>
     </div>
   );
-}
+} 

@@ -2,8 +2,6 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  height: 100%;
-  overflow-y: auto;
 }
 
 .profile-header {
@@ -400,6 +398,16 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 16px 0;
+}
+
+[data-theme="dark"] .skills-section h3,
+[data-theme="dark"] .achievements-section h3 {
+  color: #ffffff;
+}
+
+[data-theme="light"] .skills-section h3,
+[data-theme="light"] .achievements-section h3 {
+  color: #171717;
 }
 
 .skills-grid {
@@ -927,7 +935,7 @@
   .profile-content {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-sidebar {
     order: -1;
   }
@@ -937,55 +945,55 @@
   .profile-page {
     padding: 16px;
   }
-  
+
   .profile-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .profile-cover {
     flex-direction: column;
     text-align: center;
     align-items: center;
   }
-  
+
   .profile-name-section {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .profile-meta {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-tabs {
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   .tab {
     white-space: nowrap;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .skills-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .settings-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .setting-card {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .setting-controls {
     width: 100%;
     justify-content: flex-start;
@@ -998,21 +1006,21 @@
     height: 80px;
     font-size: 24px;
   }
-  
+
   .profile-name {
     font-size: 24px;
   }
-  
+
   .profile-badges {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .contact-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .social-links {
     justify-content: center;
   }
-} 
+}

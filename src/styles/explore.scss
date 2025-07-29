@@ -49,8 +49,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .search-input {
@@ -213,6 +218,17 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.results-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+[data-theme="dark"] .results-header h2 {
+  color: #ffffff;
 }
 
 .results-count {
@@ -428,6 +444,10 @@
   color: var(--primary-foreground);
 }
 
+[data-theme="dark"] .btn-primary {
+  color: #ffffff;
+}
+
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
@@ -483,63 +503,63 @@
   .explore-page {
     padding: 16px;
   }
-  
+
   .search-section {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .search-actions {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .users-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .user-card {
     padding: 16px;
   }
-  
+
   .user-actions {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .btn {
     justify-content: center;
     padding: 8px 12px;
     font-size: 12px;
   }
-  
+
   .skills-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
-  
+
   .results-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .filters-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .user-header {
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
-  
+
   .user-meta {
     justify-content: center;
   }
-  
+
   .user-location {
     justify-content: center;
   }
-  
+
   .user-rating {
     position: absolute;
     top: 20px;
@@ -551,77 +571,78 @@
   .explore-page {
     padding: 12px;
   }
-  
+
   .page-title {
     font-size: 24px;
   }
-  
+
   .page-subtitle {
     font-size: 14px;
   }
-  
+
   .search-input {
     padding: 10px 16px 10px 44px;
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
+    /* Prevents zoom on iOS */
   }
-  
+
   .filter-btn {
     padding: 10px 12px;
     font-size: 13px;
   }
-  
+
   .filters-section {
     padding: 16px;
   }
-  
+
   .filters-title {
     font-size: 15px;
   }
-  
+
   .user-avatar {
     width: 50px;
     height: 50px;
     font-size: 16px;
   }
-  
+
   .user-name {
     font-size: 16px;
   }
-  
+
   .user-role {
     font-size: 13px;
   }
-  
+
   .user-college {
     font-size: 12px;
   }
-  
+
   .user-bio {
     font-size: 13px;
   }
-  
+
   .user-meta {
     font-size: 12px;
   }
-  
+
   .skill-tag {
     font-size: 10px;
     padding: 3px 6px;
   }
-  
+
   .btn {
     padding: 8px 10px;
     font-size: 11px;
   }
-  
+
   .no-results {
     padding: 40px 16px;
   }
-  
+
   .no-results-content h3 {
     font-size: 18px;
   }
-  
+
   .no-results-content p {
     font-size: 13px;
   }
@@ -632,43 +653,43 @@
   .explore-page {
     padding: 12px;
   }
-  
+
   .explore-header {
     margin-bottom: 20px;
   }
-  
+
   .page-title {
     font-size: 20px;
     margin-bottom: 4px;
   }
-  
+
   .page-subtitle {
     font-size: 13px;
   }
-  
+
   .search-section {
     margin-bottom: 20px;
   }
-  
+
   .filters-section {
     padding: 12px;
     margin-bottom: 16px;
   }
-  
+
   .user-card {
     padding: 16px;
   }
-  
+
   .user-avatar {
     width: 40px;
     height: 40px;
     font-size: 14px;
   }
-  
+
   .user-name {
     font-size: 14px;
   }
-  
+
   .user-bio {
     font-size: 12px;
     margin-bottom: 12px;
@@ -676,7 +697,8 @@
 }
 
 /* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
   .user-card {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
@@ -684,16 +706,17 @@
 
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
+
   .user-card,
   .filter-btn,
   .btn {
     transition: none;
   }
-  
+
   .user-card:hover {
     transform: none;
   }
-  
+
   .btn-primary:hover {
     transform: none;
   }
@@ -748,6 +771,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -868,19 +892,20 @@
 
 /* Print styles */
 @media print {
+
   .search-section,
   .filters-section,
   .user-actions {
     display: none;
   }
-  
+
   .users-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
-  
+
   .user-card {
     box-shadow: none;
     border: 1px solid #ccc;
   }
-} 
+}
