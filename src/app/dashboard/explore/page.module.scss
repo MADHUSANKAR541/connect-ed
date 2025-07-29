@@ -683,3 +683,380 @@
     border: 1px solid #ccc;
   }
 } 
+
+.alumni-recommendations {
+  margin: 24px 0;
+  padding: 20px 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  h2 {
+    color: #2563eb;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+  }
+  ul {
+    padding-left: 18px;
+    margin-bottom: 0;
+  }
+  li {
+    margin-bottom: 4px;
+    font-size: 1rem;
+  }
+  .error {
+    color: #e11d48;
+    margin-top: 8px;
+  }
+}
+
+// AI Recommendation Button
+.ai-recommendation-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// AI Recommendation Modal
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  max-width: 700px;
+  width: 100%;
+  max-height: 75vh; // Reduced to ensure it fits within viewport
+  overflow: hidden;
+  animation: modalSlideIn 0.4s ease-out;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px 24px; // Reduced padding
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+
+  h3 {
+    margin: 0;
+    font-size: 1.3rem; // Slightly smaller
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+.modal-body {
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+  min-height: 0;
+  max-height: calc(75vh - 140px); // Ensure it doesn't exceed viewport
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+.ai-recommendation-content {
+  padding: 20px 24px; // Reduced padding
+  min-height: 80px; // Reduced minimum height
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+
+  .spinner {
+    animation: spin 1s linear infinite;
+    color: #3b82f6;
+    margin-bottom: 16px;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.recommendation-text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-height: calc(75vh - 220px); // Reduced to ensure it fits within viewport
+  overflow-y: auto; // Allow scrolling within the recommendation text if needed
+  overflow-x: hidden;
+
+  .sparkles-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #3b82f6;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-shrink: 0; // Prevent header from shrinking
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.7;
+    color: #1f2937;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    text-align: left;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-top: 8px;
+    flex: 1; // Take remaining space
+    overflow-y: auto; // Allow scrolling within paragraph
+    max-height: calc(75vh - 280px); // Ensure paragraph doesn't exceed viewport
+  }
+
+  // Style for numbered lists or structured content
+  ol, ul {
+    margin: 12px 0;
+    padding-left: 20px;
+    
+    li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+      color: #374151;
+      font-size: 14px;
+    }
+  }
+
+  // Style for any bold text or emphasis
+  strong, b {
+    color: #1f2937;
+    font-weight: 600;
+  }
+
+  // Style for email addresses or contact info
+  a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 16px 24px; // Reduced padding
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
+
+  .btn {
+    padding: 10px 20px; // Reduced padding
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    min-width: 120px;
+
+    &.btn-outline {
+      background: #fff;
+      border: 2px solid #d1d5db;
+      color: #374151;
+
+      &:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+        transform: translateY(-1px);
+      }
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid transparent;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+      }
+    }
+  }
+}
+
+.error {
+  color: #e11d48;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 16px 0;
+  font-size: 14px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+// Responsive design for modal
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    max-height: 80vh; // Reduced for mobile
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 16px 20px 12px 20px; // Further reduced for mobile
+
+    h3 {
+      font-size: 1.1rem; // Smaller for mobile
+    }
+  }
+
+  .modal-body {
+    max-height: calc(80vh - 120px); // Adjusted for mobile
+  }
+
+  .ai-recommendation-content {
+    padding: 16px 20px; // Reduced for mobile
+  }
+
+  .recommendation-text {
+    padding: 16px; // Reduced for mobile
+    max-height: calc(80vh - 180px); // Adjusted for mobile
+  }
+
+  .modal-footer {
+    padding: 12px 20px; // Reduced for mobile
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+      min-width: auto;
+      padding: 12px 16px; // Adjusted for mobile
+    }
+  }
+} 

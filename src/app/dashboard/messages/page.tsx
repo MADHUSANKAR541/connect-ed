@@ -64,6 +64,8 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toxicity, setToxicity] = useState<{ label: string; score: number; feedback: string } | null>(null);
+  const [toxicityLoading, setToxicityLoading] = useState(false);
 
   // Remove mock data for demo
   // const mockChats: Chat[] = [
@@ -170,6 +172,36 @@ export default function MessagesPage() {
       loadMessages(selectedChat);
     }
   }, [selectedChat]);
+
+  useEffect(() => {
+    if (!message.trim()) {
+      setToxicity(null);
+      return;
+    }
+    let active = true;
+    setToxicityLoading(true);
+    const checkToxicity = setTimeout(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('message', message);
+        const res = await fetch('http://localhost:8000/check-toxicity', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Toxicity check failed');
+        const data = await res.json();
+        if (active) setToxicity(data);
+      } catch (err) {
+        if (active) setToxicity(null);
+      } finally {
+        if (active) setToxicityLoading(false);
+      }
+    }, 500); // debounce
+    return () => {
+      active = false;
+      clearTimeout(checkToxicity);
+    };
+  }, [message]);
 
   const loadChats = async () => {
     setLoading(true);
@@ -380,13 +412,22 @@ export default function MessagesPage() {
                       className="message-input"
                       disabled={sending}
                     />
+                    {/* Toxicity feedback */}
+                    {toxicityLoading && message.trim() && (
+                      <div className="toxicity-feedback nontoxic">Checking toxicity...</div>
+                    )}
+                    {toxicity && message.trim() && (
+                      <div className={`toxicity-feedback ${toxicity.label.toLowerCase() === 'toxic' ? 'toxic' : 'nontoxic'}`}>
+                        {toxicity.feedback} (Score: {toxicity.score})
+                      </div>
+                    )}
                     <button type="button" className="action-btn emoji-btn" title="Emoji">
                       <Smile size={18} />
                     </button>
                     <button 
                       type="submit" 
                       className="send-btn modern-send-btn" 
-                      disabled={!message.trim() || sending}
+                      disabled={!message.trim() || sending || !!(toxicity && toxicity.label.toLowerCase() === 'toxic')}
                       title="Send"
                     >
                       <Send size={18} />

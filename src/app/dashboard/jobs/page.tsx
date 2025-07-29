@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Briefcase, 
@@ -113,6 +113,12 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(false);
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAlumniReferral, setShowAlumniReferral] = useState(false);
+  const [alumniQuery, setAlumniQuery] = useState('');
+  const [alumniResults, setAlumniResults] = useState<any>(null);
+  const [alumniLoading, setAlumniLoading] = useState(false);
+  const [alumniError, setAlumniError] = useState<string | null>(null);
+  const alumniInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isAlumni) {
@@ -343,6 +349,28 @@ export default function JobsPage() {
     return matchesSearch && matchesFilter;
   });
 
+  const handleAlumniReferral = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAlumniLoading(true);
+    setAlumniResults(null);
+    setAlumniError(null);
+    try {
+      const formData = new FormData();
+      formData.append('query', alumniQuery);
+      const res = await fetch('http://localhost:8000/alumni-referral', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to get alumni referral');
+      const data = await res.json();
+      setAlumniResults(data);
+    } catch (err: any) {
+      setAlumniError(err.message || 'Something went wrong');
+    } finally {
+      setAlumniLoading(false);
+    }
+  };
+
   // Student Interface
   if (!isAlumni) {
     return (
@@ -366,6 +394,20 @@ export default function JobsPage() {
             >
               <Send size={20} />
               <span>My Requests</span>
+            </button>
+            <button 
+              className="action-btn alumni-referral-btn"
+              onClick={() => { 
+                console.log('Alumni referral button clicked');
+                setShowAlumniReferral(true); 
+                setTimeout(() => {
+                  console.log('Focusing input, ref:', alumniInputRef.current);
+                  alumniInputRef.current?.focus();
+                }, 100); 
+              }}
+            >
+              <User size={20} />
+              <span>Get Alumni Referral</span>
             </button>
           </div>
         </div>
@@ -629,6 +671,110 @@ export default function JobsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+        {/* Alumni Referral Modal */}
+        {showAlumniReferral && (
+          <div className="modal-overlay" onClick={() => setShowAlumniReferral(false)}>
+            <motion.div
+              className="modal-content"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2>Get Alumni Referral</h2>
+                <button
+                  className="close-btn"
+                  onClick={() => setShowAlumniReferral(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="modal-body">
+                <form onSubmit={handleAlumniReferral} className="modal-form">
+                  <div className="form-group">
+                    <label>What are you looking for?</label>
+                    <input
+                      ref={alumniInputRef}
+                      type="text"
+                      value={alumniQuery}
+                      onChange={e => setAlumniQuery(e.target.value)}
+                      placeholder="e.g., Software Engineer at Google, Data Science roles, AI Research positions..."
+                      className="form-input"
+                      required
+                    />
+                    <p className="help-text">Describe the job, company, or domain you're interested in</p>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => setShowAlumniReferral(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={alumniLoading}
+                    >
+                      {alumniLoading ? (
+                        <>
+                          <div className="spinner"></div>
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <User size={16} />
+                          Get Referral
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                {alumniError && (
+                  <div className="error-message">
+                    <span>⚠️</span>
+                    {alumniError}
+                  </div>
+                )}
+
+                {alumniResults && (
+                  <div className="results-section">
+                    <div className="recommendation-card">
+                      <h3>AI Recommendation</h3>
+                      <div className="recommendation-content">
+                        {alumniResults.recommendation}
+                      </div>
+                    </div>
+
+                    {alumniResults.retrieved_alumni && alumniResults.retrieved_alumni.length > 0 && (
+                      <div className="alumni-list">
+                        <h4>Top Alumni Matches</h4>
+                        <div className="alumni-grid">
+                          {alumniResults.retrieved_alumni.map((al: string, idx: number) => (
+                            <div key={idx} className="alumni-item">
+                              <div className="alumni-avatar">
+                                <span>{al.charAt(0)}</span>
+                              </div>
+                              <div className="alumni-info">
+                                <span className="alumni-name">{al}</span>
+                                <span className="alumni-status">Available for Referral</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </div>
         )}

@@ -18,9 +18,12 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import '../../../styles/explore.scss';
+import { useSession } from 'next-auth/react';
+import styles from './page.module.scss';
 
 interface User {
   id: string;
@@ -53,16 +56,101 @@ export default function ExplorePage() {
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedCollege, setSelectedCollege] = useState('all');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('relevance');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [connectMessage, setConnectMessage] = useState('');
+  const { data: session } = useSession();
+  const [alumniRecs, setAlumniRecs] = useState<any>(null);
+  const [alumniLoading, setAlumniLoading] = useState(false);
+  const [alumniError, setAlumniError] = useState<string | null>(null);
 
+  // AI Recommendation Modal State
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Invite Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showAiModal || showInviteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAiModal, showInviteModal]);
+
+  // Function to clean AI output by removing asterisks
+  const cleanAiOutput = (text: string) => {
+    return text
+      .replace(/\*\*/g, '') // Remove markdown bold
+      .replace(/\*/g, '') // Remove markdown asterisks
+      .replace(/`/g, '') // Remove backticks
+      .replace(/#{1,6}\s/g, '') // Remove markdown headers
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links
+      .replace(/^\s*[-*+]\s/gm, '') // Remove markdown list markers
+      .replace(/^\s*\d+\.\s/gm, '') // Remove numbered list markers
+      .trim();
+  };
+
+  const formatUsernames = (text: string) => {
+    // Pattern to match names (words that start with capital letters, likely followed by more words)
+    // This will match patterns like "Madhu Sankar", "Test User", "Kavinmathi V", etc.
+    return text.replace(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g, '<strong>$1</strong>');
+  };
+
+  // Function to get AI recommendation
+  const getAiRecommendation = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    setAiRecommendation('');
+    
+    try {
+      // Use the current search context to generate recommendation
+      const context = {
+        query: searchQuery,
+        role: selectedRole,
+        college: selectedCollege,
+        skills: selectedSkills
+      };
+      
+      const response = await fetch('http://localhost:8000/alumni-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          query: `Based on search for: ${searchQuery || 'general networking'}, role: ${selectedRole}, college: ${selectedCollege}, skills: ${selectedSkills.join(', ')}. Provide personalized networking and connection recommendations.`
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to get AI recommendation');
+      
+      const data = await response.json();
+      setAiRecommendation(cleanAiOutput(data.recommendation || 'No recommendation available.'));
+    } catch (err: any) {
+      setAiError(err.message || 'Failed to get AI recommendation');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
 
   const colleges = [
@@ -83,26 +171,18 @@ export default function ExplorePage() {
     { value: 'PROFESSOR', label: 'Professors' }
   ];
 
-  const sortOptions = [
-    { value: 'relevance', label: 'Relevance' },
-    { value: 'rating', label: 'Rating' },
-    { value: 'recent', label: 'Recently Active' },
-    { value: 'name', label: 'Name' }
-  ];
 
-  // Search users with Elasticsearch
+
+  // Search users with database
   const searchUsers = async (resetPage = true) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        elastic: 'true',
-        q: searchQuery,
+        search: searchQuery,
         role: selectedRole,
         collegeId: selectedCollege === 'all' ? '' : selectedCollege,
-        skills: selectedSkills.join(','),
         page: resetPage ? '1' : page.toString(),
         limit: '20',
-        sortBy,
       });
 
       const response = await fetch(`/api/users?${params}`);
@@ -122,26 +202,6 @@ export default function ExplorePage() {
     }
   };
 
-  // Get search suggestions
-  const getSuggestions = async (query: string) => {
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
-      const data = await response.json();
-      setSuggestions(data.suggestions || []);
-    } catch (error) {
-      console.error('Suggestions error:', error);
-    }
-  };
-
   // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -150,11 +210,38 @@ export default function ExplorePage() {
       } else if (searchQuery.length === 0) {
         searchUsers();
       }
-      getSuggestions(searchQuery);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedRole, selectedCollege, selectedSkills, sortBy]);
+  }, [searchQuery, selectedRole, selectedCollege]);
+
+  useEffect(() => {
+    // Try to use user's domain/interest for recommendations
+    // Fallback to a generic query if not available
+    const userDomain = (session?.user && 'domain' in session.user && (session.user as any).domain) ? (session.user as any).domain : 'engineering';
+    if (!userDomain) return;
+    setAlumniLoading(true);
+    setAlumniRecs(null);
+    setAlumniError(null);
+    const fetchRecs = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('query', userDomain);
+        const res = await fetch('http://localhost:8000/alumni-referral', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Failed to get alumni recommendations');
+        const data = await res.json();
+        setAlumniRecs(data);
+      } catch (err: any) {
+        setAlumniError(err.message || 'Something went wrong');
+      } finally {
+        setAlumniLoading(false);
+      }
+    };
+    fetchRecs();
+  }, [session?.user]);
 
   const handleSkillToggle = (skill: string) => {
     setSelectedSkills(prev => 
@@ -168,7 +255,6 @@ export default function ExplorePage() {
     setSelectedRole('all');
     setSelectedCollege('all');
     setSelectedSkills([]);
-    setSortBy('relevance');
     setSearchQuery('');
   };
 
@@ -219,6 +305,59 @@ export default function ExplorePage() {
     }
   };
 
+  const sendInvite = async () => {
+    if (!inviteName.trim() || !invitePhone.trim()) {
+      setInviteError('Name and phone number are required');
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError(null);
+    setInviteSuccess(false);
+
+    try {
+      const response = await fetch('/api/invites/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: inviteName.trim(),
+          phoneNumber: invitePhone.trim(),
+          message: inviteMessage.trim() || undefined
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setInviteSuccess(true);
+        setInviteName('');
+        setInvitePhone('');
+        setInviteMessage('');
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowInviteModal(false);
+          setInviteSuccess(false);
+        }, 2000);
+      } else {
+        setInviteError(data.error || 'Failed to send invite');
+      }
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      setInviteError('Failed to send invite. Please try again.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const openInviteModal = () => {
+    setShowInviteModal(true);
+    setInviteName('');
+    setInvitePhone('');
+    setInviteMessage('Hi! I found you on ConnectED and thought you might be interested in joining our platform. It\'s a great place for students, alumni, and professors to connect and network. Check it out! link : https://connect-ed-dqf7.vercel.app/');
+    setInviteError(null);
+    setInviteSuccess(false);
+  };
+
   return (
     <div className="explore-page">
       <div className="explore-header">
@@ -251,38 +390,22 @@ export default function ExplorePage() {
             {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
           
-          <select 
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
+
+          
+          <button 
+            className="ai-recommendation-btn"
+            onClick={() => {
+              setShowAiModal(true);
+              getAiRecommendation();
+            }}
           >
-            {sortOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <Sparkles size={16} />
+            Get AI Recommendation
+          </button>
         </div>
       </div>
 
-      {/* Search Suggestions */}
-      {suggestions.length > 0 && searchQuery.length > 0 && (
-        <div className="suggestions-dropdown">
-          {suggestions.map((suggestion, index) => (
-            <div
-              key={index}
-              className="suggestion-item"
-              onClick={() => {
-                setSearchQuery(suggestion);
-                setSuggestions([]);
-              }}
-            >
-              <Search size={14} />
-              <span>{suggestion}</span>
-            </div>
-          ))}
-        </div>
-      )}
+
 
       {showFilters && (
         <motion.div
@@ -408,13 +531,11 @@ export default function ExplorePage() {
                     </div>
                   )}
                 </div>
-                                  <div className="user-rating">
-                    <Star size={16} />
-                    <span>{user.rating || 0}</span>
-                  </div>
+                <div className="user-rating">
+                  <Star size={16} />
+                  <span>{user.rating || 0}</span>
+                </div>
               </div>
-
-
 
               <div className="user-skills">
                 {(user.skills || []).slice(0, 3).map(skill => (
@@ -429,16 +550,16 @@ export default function ExplorePage() {
                 )}
               </div>
 
-                              <div className="user-stats">
-                  <div className="stat">
-                    <Users size={14} />
-                    <span>{user.connections || 0} connections</span>
-                  </div>
-                  <div className="stat">
-                    <GraduationCap size={14} />
-                    <span>{user.batch || 'N/A'}</span>
-                  </div>
+              <div className="user-stats">
+                <div className="stat">
+                  <Users size={14} />
+                  <span>{user.connections || 0} connections</span>
                 </div>
+                <div className="stat">
+                  <GraduationCap size={14} />
+                  <span>{user.batch || 'N/A'}</span>
+                </div>
+              </div>
 
               <div className="user-actions">
                 <button 
@@ -479,9 +600,15 @@ export default function ExplorePage() {
             <div className="no-results-content">
               <h3>No results found</h3>
               <p>Try adjusting your search criteria or filters</p>
-              <button className="btn btn-primary" onClick={clearFilters}>
-                Clear Filters
-              </button>
+              <div className="no-results-actions">
+                <button className="btn btn-primary" onClick={clearFilters}>
+                  Clear Filters
+                </button>
+                <button className="btn btn-outline invite-btn" onClick={openInviteModal}>
+                  <UserPlus size={16} />
+                  Send Invite
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -491,6 +618,23 @@ export default function ExplorePage() {
             <button className="btn btn-outline" onClick={loadMore}>
               Load More
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Alumni Recommendations */}
+      <div className={styles['alumni-recommendations']}>
+        <h2>Alumni Recommendations</h2>
+        {alumniLoading && <div>Loading recommendations...</div>}
+        {alumniError && <div className={styles.error}>{alumniError}</div>}
+        {alumniRecs && (
+          <div>
+            <div style={{ whiteSpace: 'pre-wrap', marginBottom: 8 }}>{alumniRecs.recommendation}</div>
+            <ul>
+              {alumniRecs.retrieved_alumni?.map((al: string, idx: number) => (
+                <li key={idx}>{al}</li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
@@ -513,10 +657,10 @@ export default function ExplorePage() {
                 <div className="user-avatar">
                   <span>{selectedUser.avatar}</span>
                 </div>
-                                  <div className="user-info">
-                    <h4>{selectedUser.name}</h4>
-                    <p>{selectedUser.role} • {selectedUser.college}</p>
-                  </div>
+                <div className="user-info">
+                  <h4>{selectedUser.name}</h4>
+                  <p>{selectedUser.role} • {selectedUser.college}</p>
+                </div>
               </div>
               <div className="message-section">
                 <label htmlFor="connect-message">Message (optional):</label>
@@ -546,6 +690,203 @@ export default function ExplorePage() {
           </div>
         </div>
       )}
+
+      {/* AI Recommendation Modal */}
+      {showAiModal && (
+        <div className="modal-overlay" onClick={() => setShowAiModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <Sparkles size={20} />
+                AI Networking Recommendation
+              </h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowAiModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="ai-recommendation-content">
+                {aiLoading && (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Loader2 size={32} className="spinner" />
+                    <p style={{ marginTop: '16px', color: '#6b7280' }}>
+                      Generating personalized recommendation...
+                    </p>
+                  </div>
+                )}
+                {aiError && (
+                  <div className={styles.error}>
+                    <span>⚠️</span>
+                    {aiError}
+                  </div>
+                )}
+                {aiRecommendation && (
+                  <div className="recommendation-text">
+                    <div className="sparkles-icon">
+                      <Sparkles size={20} />
+                      <span>AI Recommendation</span>
+                    </div>
+                    <div style={{ 
+                      maxHeight: 'none', 
+                      overflow: 'visible',
+                      width: '100%'
+                    }}>
+                      <p style={{
+                        fontSize: '15px',
+                        lineHeight: '1.7',
+                        color: '#1f2937',
+                        margin: '0',
+                        padding: '16px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '12px',
+                        borderLeft: '4px solid #3b82f6',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        maxHeight: 'calc(75vh - 250px)', // Ensure it doesn't exceed viewport
+                        overflowY: 'auto' // Allow scrolling within the paragraph if needed
+                      }}
+                      dangerouslySetInnerHTML={{ __html: formatUsernames(aiRecommendation) }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {!aiLoading && !aiError && !aiRecommendation && (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                    <Sparkles size={32} style={{ marginBottom: '16px' }} />
+                    <p>Click "Get New Recommendation" to start</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowAiModal(false)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={getAiRecommendation}
+                disabled={aiLoading}
+              >
+                {aiLoading ? 'Generating...' : 'Get New Recommendation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <div className="modal-content invite-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <UserPlus size={20} />
+                Send Invite
+              </h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowInviteModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              {inviteSuccess ? (
+                <div className="invite-success">
+                  <div className="success-icon">✓</div>
+                  <h4>Invite Sent Successfully!</h4>
+                  <p>Your invite has been sent via SMS. The person will receive a message to join CampusConnect.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="invite-form">
+                    <div className="form-group">
+                      <label htmlFor="invite-name">Name *</label>
+                      <input
+                        id="invite-name"
+                        type="text"
+                        value={inviteName}
+                        onChange={(e) => setInviteName(e.target.value)}
+                        placeholder="Enter the person's name"
+                        className="form-input"
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="invite-phone">Phone Number *</label>
+                      <input
+                        id="invite-phone"
+                        type="tel"
+                        value={invitePhone}
+                        onChange={(e) => setInvitePhone(e.target.value)}
+                        placeholder="Enter phone number (e.g., +1234567890)"
+                        className="form-input"
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="invite-message">Personal Message (Optional)</label>
+                      <textarea
+                        id="invite-message"
+                        value={inviteMessage}
+                        onChange={(e) => setInviteMessage(e.target.value)}
+                        placeholder="Add a personal message to your invite..."
+                        className="form-textarea"
+                        rows={3}
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  {inviteError && (
+                    <div className="invite-error">
+                      <span>⚠️</span>
+                      {inviteError}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {!inviteSuccess && (
+              <div className="modal-footer">
+                <button 
+                  className="btn btn-outline"
+                  onClick={() => setShowInviteModal(false)}
+                  disabled={inviteLoading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={sendInvite}
+                  disabled={inviteLoading || !inviteName.trim() || !invitePhone.trim()}
+                >
+                  {inviteLoading ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} />
+                      Send Invite
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

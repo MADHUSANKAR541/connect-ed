@@ -56,10 +56,8 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
       } else if (currentPath.startsWith('/admin') && userRole !== 'ADMIN') {
         // If user is trying to access admin page but is not admin, redirect to dashboard
         router.push('/dashboard');
-      } else if (userRole === 'ADMIN' && (currentPath === '/dashboard' || currentPath.startsWith('/dashboard/'))) {
-        // If admin is trying to access dashboard, redirect to admin panel
-        router.push('/admin');
       }
+      // Removed the admin redirect to allow admins to access dashboard pages
     }
     }, 100); // Small delay to ensure session is fully established
 
