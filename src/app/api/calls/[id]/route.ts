@@ -63,6 +63,45 @@ export async function PUT(
       );
     }
 
+    // If call is accepted or rejected, create a notification for the sender
+    if (status.toUpperCase() === 'ACCEPTED' || status.toUpperCase() === 'REJECTED') {
+      // Get sender information
+      const { data: sender, error: senderError } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', call.sender_id)
+        .single();
+
+      if (!senderError && sender) {
+        const notificationType = status.toUpperCase() === 'ACCEPTED' ? 'CALL_ACCEPTED' : 'CALL_REJECTED';
+        const notificationTitle = status.toUpperCase() === 'ACCEPTED' ? 'Call Request Accepted' : 'Call Request Rejected';
+        const notificationMessage = status.toUpperCase() === 'ACCEPTED' 
+          ? `Your call request "${call.title}" has been accepted by ${session.user.name}.`
+          : `Your call request "${call.title}" has been rejected by ${session.user.name}.`;
+
+        // Create notification for the sender
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: call.sender_id,
+            type: notificationType,
+            title: notificationTitle,
+            message: notificationMessage,
+            is_read: false,
+            data: {
+              call_id: id,
+              receiver_id: session.user.id,
+              receiver_name: session.user.name
+            }
+          });
+
+        if (notificationError) {
+          console.error('Error creating notification:', notificationError);
+          // Don't fail the call update if notification fails
+        }
+      }
+    }
+
     return NextResponse.json({ call: updatedCall });
   } catch (error) {
     console.error('Error updating call:', error);

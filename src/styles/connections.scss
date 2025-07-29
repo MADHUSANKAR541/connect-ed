@@ -419,3 +419,138 @@
 [data-theme="light"] .connections-page {
   color: var(--foreground);
 } 
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: var(--card, #fff);
+  color: var(--foreground, #222);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 32px 24px;
+  min-width: 320px;
+  max-width: 90vw;
+  text-align: center;
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-content h2 {
+  margin-bottom: 8px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.modal-content button {
+  margin-top: 16px;
+  align-self: center;
+} 
+
+/* Schedule Call Modal Enhancements */
+.schedule-modal {
+  min-width: 350px;
+  max-width: 420px;
+  padding: 0;
+  background: var(--card, #fff);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 28px 32px 12px 32px;
+  background: var(--card, #fff);
+}
+
+.modal-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+}
+
+.modal-subtitle {
+  font-size: 15px;
+  color: var(--muted-foreground);
+  margin-bottom: 0;
+}
+
+.modal-divider {
+  height: 1px;
+  background: var(--border, #eee);
+  margin: 0 0 0 0;
+  width: 100%;
+}
+
+.schedule-form {
+  padding: 24px 32px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.input-icon-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.input-icon-group input,
+.input-icon-group select {
+  padding-left: 38px !important;
+}
+
+.schedule-row {
+  display: flex;
+  gap: 16px;
+}
+
+.schedule-row .form-group {
+  flex: 1;
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .schedule-modal {
+    min-width: 0;
+    max-width: 98vw;
+    padding: 0;
+  }
+  .modal-header, .schedule-form {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .schedule-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+} 

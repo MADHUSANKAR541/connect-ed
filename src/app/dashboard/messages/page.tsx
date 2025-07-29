@@ -25,6 +25,7 @@ interface Chat {
     name: string;
     avatar: string;
     role: string;
+    isOnline?: boolean; // Added for online indicator
   };
   lastMessage?: {
     content: string;
@@ -279,9 +280,12 @@ export default function MessagesPage() {
                 key={chat.id}
                 className={`chat-item ${selectedChat === chat.id ? 'active' : ''}`}
                 onClick={() => setSelectedChat(chat.id)}
+                tabIndex={0}
               >
                 <div className="chat-avatar">
-                  <span>{chat.user.avatar}</span>
+                  <span>{chat.user.avatar || chat.user.name?.[0] || '?'}</span>
+                  {/* Online indicator */}
+                  {chat.user.isOnline && <span className="online-dot" />}
                 </div>
                 <div className="chat-info">
                   <div className="chat-header">
@@ -302,15 +306,17 @@ export default function MessagesPage() {
             ))}
           </div>
         </div>
-
+        {/* Divider */}
+        <div className="chat-divider" />
         {/* Chat Area */}
         <div className="chat-area">
           {selectedChatData ? (
             <>
-              <div className="chat-header">
+              <div className="chat-header chat-header-main">
                 <div className="chat-user-info">
-                  <div className="chat-avatar">
-                    <span>{selectedChatData.user.avatar}</span>
+                  <div className="chat-avatar large">
+                    <span>{selectedChatData.user.avatar || selectedChatData.user.name?.[0] || '?'}</span>
+                    {selectedChatData.user.isOnline && <span className="online-dot" />}
                   </div>
                   <div className="user-details">
                     <h3 className="user-name">{selectedChatData.user.name}</h3>
@@ -318,19 +324,18 @@ export default function MessagesPage() {
                   </div>
                 </div>
                 <div className="chat-actions">
-                  <button className="action-btn">
+                  <button className="action-btn" title="Audio Call">
                     <Phone size={16} />
                   </button>
-                  <button className="action-btn">
+                  <button className="action-btn" title="Video Call">
                     <Video size={16} />
                   </button>
-                  <button className="action-btn">
+                  <button className="action-btn" title="More">
                     <MoreVertical size={16} />
                   </button>
                 </div>
               </div>
-
-              <div className="messages-container">
+              <div className="messages-bg">
                 <div className="messages-list">
                   {messages.map((msg) => {
                     const isSent = msg.sender_id === session?.user?.id;
@@ -361,18 +366,12 @@ export default function MessagesPage() {
                   })}
                 </div>
               </div>
-
               <div className="message-input-container">
-                <form onSubmit={handleSendMessage} className="message-form">
-                  <div className="input-actions">
-                    <button type="button" className="action-btn">
+                <form onSubmit={handleSendMessage} className="message-form modern-message-form">
+                  <div className="input-wrapper modern-input-wrapper">
+                    <button type="button" className="action-btn attach-btn" title="Attach file">
                       <Paperclip size={18} />
                     </button>
-                    <button type="button" className="action-btn">
-                      <Image size={18} />
-                    </button>
-                  </div>
-                  <div className="input-wrapper">
                     <input
                       type="text"
                       placeholder="Type a message..."
@@ -381,17 +380,18 @@ export default function MessagesPage() {
                       className="message-input"
                       disabled={sending}
                     />
-                    <button type="button" className="action-btn">
+                    <button type="button" className="action-btn emoji-btn" title="Emoji">
                       <Smile size={18} />
                     </button>
+                    <button 
+                      type="submit" 
+                      className="send-btn modern-send-btn" 
+                      disabled={!message.trim() || sending}
+                      title="Send"
+                    >
+                      <Send size={18} />
+                    </button>
                   </div>
-                  <button 
-                    type="submit" 
-                    className="send-btn" 
-                    disabled={!message.trim() || sending}
-                  >
-                    <Send size={18} />
-                  </button>
                 </form>
               </div>
             </>

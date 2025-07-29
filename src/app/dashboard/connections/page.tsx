@@ -16,9 +16,13 @@ import {
   MoreVertical,
   Search,
   Filter,
-  Loader2
+  Loader2,
+  Calendar as CalendarIcon,
+  Clock
 } from 'lucide-react';
 import '../../../styles/connections.scss';
+import { useSession } from 'next-auth/react';
+import { Plus, Video, Phone } from 'lucide-react';
 
 interface User {
   id: string;
@@ -50,6 +54,17 @@ export default function ConnectionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'accepted'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [scheduleConnection, setScheduleConnection] = useState<Connection | null>(null);
+  const { data: session } = useSession();
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleReceiver, setScheduleReceiver] = useState<User | null>(null);
+  const [callTitle, setCallTitle] = useState('');
+  const [callDescription, setCallDescription] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState('30');
+  const [selectedType, setSelectedType] = useState<'VIDEO' | 'AUDIO'>('VIDEO');
+  const [scheduling, setScheduling] = useState(false);
 
   useEffect(() => {
     loadConnections();
@@ -101,6 +116,49 @@ export default function ConnectionsPage() {
     } catch (error) {
       console.error('Error updating connection:', error);
       alert('Failed to update connection');
+    }
+  };
+
+  const handleScheduleCall = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scheduleReceiver || !callTitle || !selectedDate || !selectedTime) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    setScheduling(true);
+    try {
+      const scheduledAt = new Date(`${selectedDate}T${selectedTime}`);
+      const response = await fetch('/api/calls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: session?.user?.id,
+          receiverId: scheduleReceiver.id,
+          title: callTitle,
+          description: callDescription,
+          scheduledAt: scheduledAt.toISOString(),
+          duration: parseInt(selectedDuration),
+          type: selectedType,
+        }),
+      });
+      if (response.ok) {
+        setShowScheduleModal(false);
+        setCallTitle('');
+        setCallDescription('');
+        setSelectedDate('');
+        setSelectedTime('');
+        setSelectedDuration('30');
+        setSelectedType('VIDEO');
+        setScheduleReceiver(null);
+        // Optionally, show a success message or refresh calls
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to schedule call');
+      }
+    } catch (error) {
+      alert('Failed to schedule call');
+    } finally {
+      setScheduling(false);
     }
   };
 
@@ -264,8 +322,8 @@ export default function ConnectionsPage() {
                         <MessageSquare size={16} />
                         Message
                       </button>
-                      <button className="btn btn-outline">
-                        <Calendar size={16} />
+                      <button className="btn btn-outline" onClick={() => { setShowScheduleModal(true); setScheduleReceiver(connection.user); }}>
+                        <CalendarIcon size={16} />
                         Schedule Call
                       </button>
                     </div>
@@ -275,6 +333,142 @@ export default function ConnectionsPage() {
           </div>
         )}
       </div>
+      {scheduleConnection && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Schedule Call</h2>
+            <p>Schedule a call with <strong>{scheduleConnection.user.name}</strong></p>
+            <button className="btn btn-primary" onClick={() => setScheduleConnection(null)}>Close</button>
+          </div>
+        </div>
+      )}
+      {showScheduleModal && scheduleReceiver && (
+        <div className="modal-overlay">
+          <motion.div
+            className="modal schedule-modal"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+          >
+            <div className="modal-header">
+              <div>
+                <h2>Schedule a Call</h2>
+                <div className="modal-subtitle">Set up a meeting with <strong>{scheduleReceiver.name}</strong></div>
+              </div>
+              <button className="close-btn" onClick={() => setShowScheduleModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-divider" />
+            <form onSubmit={handleScheduleCall} className="modal-form schedule-form">
+              <div className="form-group">
+                <label htmlFor="call-title">Title</label>
+                <div className="input-icon-group">
+                  <Video size={18} className="input-icon" />
+                  <input
+                    id="call-title"
+                    type="text"
+                    value={callTitle}
+                    onChange={(e) => setCallTitle(e.target.value)}
+                    placeholder="Call title"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="call-description">Description</label>
+                <textarea
+                  id="call-description"
+                  value={callDescription}
+                  onChange={(e) => setCallDescription(e.target.value)}
+                  placeholder="Call description (optional)"
+                  rows={2}
+                />
+              </div>
+              <div className="form-row schedule-row">
+                <div className="form-group">
+                  <label htmlFor="call-date">Date</label>
+                  <div className="input-icon-group">
+                    <CalendarIcon size={18} className="input-icon" />
+                    <input
+                      id="call-date"
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="call-time">Time</label>
+                  <div className="input-icon-group">
+                    <Clock size={18} className="input-icon" />
+                    <input
+                      id="call-time"
+                      type="time"
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="form-row schedule-row">
+                <div className="form-group">
+                  <label htmlFor="call-duration">Duration</label>
+                  <div className="input-icon-group">
+                    <Clock size={18} className="input-icon" />
+                    <select
+                      id="call-duration"
+                      value={selectedDuration}
+                      onChange={(e) => setSelectedDuration(e.target.value)}
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="45">45 minutes</option>
+                      <option value="60">1 hour</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="call-type">Type</label>
+                  <div className="input-icon-group">
+                    <Video size={18} className="input-icon" />
+                    <select
+                      id="call-type"
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value as 'VIDEO' | 'AUDIO')}
+                    >
+                      <option value="VIDEO">Video Call</option>
+                      <option value="AUDIO">Audio Call</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Recipient</label>
+                <input type="text" value={scheduleReceiver.name} disabled />
+              </div>
+              <div className="modal-actions schedule-actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setShowScheduleModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={scheduling}
+                >
+                  {scheduling ? 'Scheduling...' : 'Schedule Call'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 } 
