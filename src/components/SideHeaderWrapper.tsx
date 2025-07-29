@@ -26,7 +26,9 @@ export default function SideHeaderWrapper() {
     '/dashboard/explore',
     '/dashboard/messages',
     '/dashboard/calls',
+    '/dashboard/jobs',     // Jobs page
     '/dashboard/notifications',
+    '/dashboard/insights',
     '/dashboard/settings'
   ];
 
@@ -34,6 +36,11 @@ export default function SideHeaderWrapper() {
   const shouldShowSideHeader = () => {
     // Don't show if not authenticated
     if (status !== 'authenticated' || !session) {
+      return false;
+    }
+
+    // Don't show on excluded pages or any dashboard pages
+    if (pathname.startsWith('/dashboard')) {
       return false;
     }
 

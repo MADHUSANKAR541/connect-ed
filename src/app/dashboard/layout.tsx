@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Bell,
-  BarChart3
+  BarChart3,
+  Briefcase
 } from 'lucide-react';
 import '../../styles/dashboard.scss';
 import '../../styles/sidebar.scss';
@@ -33,6 +34,7 @@ export default function DashboardLayout({
     { icon: Search, label: 'Explore', href: '/dashboard/explore' },
     { icon: MessageSquare, label: 'Messages', href: '/dashboard/messages' },
     { icon: Calendar, label: 'Calls', href: '/dashboard/calls' },
+    { icon: Briefcase, label: 'Jobs', href: '/dashboard/jobs' },
     { icon: Bell, label: 'Notifications', href: '/dashboard/notifications' },
     { icon: BarChart3, label: 'Insights', href: '/dashboard/insights' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
