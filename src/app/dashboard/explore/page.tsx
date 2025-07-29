@@ -56,12 +56,10 @@ export default function ExplorePage() {
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedCollege, setSelectedCollege] = useState('all');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('relevance');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [connectMessage, setConnectMessage] = useState('');
@@ -76,9 +74,18 @@ export default function ExplorePage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // Invite Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (showAiModal) {
+    if (showAiModal || showInviteModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -88,7 +95,7 @@ export default function ExplorePage() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showAiModal]);
+  }, [showAiModal, showInviteModal]);
 
   // Function to clean AI output by removing asterisks
   const cleanAiOutput = (text: string) => {
@@ -164,26 +171,18 @@ export default function ExplorePage() {
     { value: 'PROFESSOR', label: 'Professors' }
   ];
 
-  const sortOptions = [
-    { value: 'relevance', label: 'Relevance' },
-    { value: 'rating', label: 'Rating' },
-    { value: 'recent', label: 'Recently Active' },
-    { value: 'name', label: 'Name' }
-  ];
 
-  // Search users with Elasticsearch
+
+  // Search users with database
   const searchUsers = async (resetPage = true) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        elastic: 'true',
-        q: searchQuery,
+        search: searchQuery,
         role: selectedRole,
         collegeId: selectedCollege === 'all' ? '' : selectedCollege,
-        skills: selectedSkills.join(','),
         page: resetPage ? '1' : page.toString(),
         limit: '20',
-        sortBy,
       });
 
       const response = await fetch(`/api/users?${params}`);
@@ -203,26 +202,6 @@ export default function ExplorePage() {
     }
   };
 
-  // Get search suggestions
-  const getSuggestions = async (query: string) => {
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-      });
-      const data = await response.json();
-      setSuggestions(data.suggestions || []);
-    } catch (error) {
-      console.error('Suggestions error:', error);
-    }
-  };
-
   // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -231,11 +210,10 @@ export default function ExplorePage() {
       } else if (searchQuery.length === 0) {
         searchUsers();
       }
-      getSuggestions(searchQuery);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, selectedRole, selectedCollege, selectedSkills, sortBy]);
+  }, [searchQuery, selectedRole, selectedCollege]);
 
   useEffect(() => {
     // Try to use user's domain/interest for recommendations
@@ -277,7 +255,6 @@ export default function ExplorePage() {
     setSelectedRole('all');
     setSelectedCollege('all');
     setSelectedSkills([]);
-    setSortBy('relevance');
     setSearchQuery('');
   };
 
@@ -328,6 +305,59 @@ export default function ExplorePage() {
     }
   };
 
+  const sendInvite = async () => {
+    if (!inviteName.trim() || !invitePhone.trim()) {
+      setInviteError('Name and phone number are required');
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError(null);
+    setInviteSuccess(false);
+
+    try {
+      const response = await fetch('/api/invites/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: inviteName.trim(),
+          phoneNumber: invitePhone.trim(),
+          message: inviteMessage.trim() || undefined
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setInviteSuccess(true);
+        setInviteName('');
+        setInvitePhone('');
+        setInviteMessage('');
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowInviteModal(false);
+          setInviteSuccess(false);
+        }, 2000);
+      } else {
+        setInviteError(data.error || 'Failed to send invite');
+      }
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      setInviteError('Failed to send invite. Please try again.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const openInviteModal = () => {
+    setShowInviteModal(true);
+    setInviteName('');
+    setInvitePhone('');
+    setInviteMessage('Hi! I found you on ConnectED and thought you might be interested in joining our platform. It\'s a great place for students, alumni, and professors to connect and network. Check it out! link : https://connect-ed-dqf7.vercel.app/');
+    setInviteError(null);
+    setInviteSuccess(false);
+  };
+
   return (
     <div className="explore-page">
       <div className="explore-header">
@@ -360,17 +390,7 @@ export default function ExplorePage() {
             {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
           
-          <select 
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
-          >
-            {sortOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+
           
           <button 
             className="ai-recommendation-btn"
@@ -385,24 +405,7 @@ export default function ExplorePage() {
         </div>
       </div>
 
-      {/* Search Suggestions */}
-      {suggestions.length > 0 && searchQuery.length > 0 && (
-        <div className="suggestions-dropdown">
-          {suggestions.map((suggestion, index) => (
-            <div
-              key={index}
-              className="suggestion-item"
-              onClick={() => {
-                setSearchQuery(suggestion);
-                setSuggestions([]);
-              }}
-            >
-              <Search size={14} />
-              <span>{suggestion}</span>
-            </div>
-          ))}
-        </div>
-      )}
+
 
       {showFilters && (
         <motion.div
@@ -597,9 +600,15 @@ export default function ExplorePage() {
             <div className="no-results-content">
               <h3>No results found</h3>
               <p>Try adjusting your search criteria or filters</p>
-              <button className="btn btn-primary" onClick={clearFilters}>
-                Clear Filters
-              </button>
+              <div className="no-results-actions">
+                <button className="btn btn-primary" onClick={clearFilters}>
+                  Clear Filters
+                </button>
+                <button className="btn btn-outline invite-btn" onClick={openInviteModal}>
+                  <UserPlus size={16} />
+                  Send Invite
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -768,6 +777,113 @@ export default function ExplorePage() {
                 {aiLoading ? 'Generating...' : 'Get New Recommendation'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <div className="modal-content invite-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <UserPlus size={20} />
+                Send Invite
+              </h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowInviteModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              {inviteSuccess ? (
+                <div className="invite-success">
+                  <div className="success-icon">✓</div>
+                  <h4>Invite Sent Successfully!</h4>
+                  <p>Your invite has been sent via SMS. The person will receive a message to join CampusConnect.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="invite-form">
+                    <div className="form-group">
+                      <label htmlFor="invite-name">Name *</label>
+                      <input
+                        id="invite-name"
+                        type="text"
+                        value={inviteName}
+                        onChange={(e) => setInviteName(e.target.value)}
+                        placeholder="Enter the person's name"
+                        className="form-input"
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="invite-phone">Phone Number *</label>
+                      <input
+                        id="invite-phone"
+                        type="tel"
+                        value={invitePhone}
+                        onChange={(e) => setInvitePhone(e.target.value)}
+                        placeholder="Enter phone number (e.g., +1234567890)"
+                        className="form-input"
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="invite-message">Personal Message (Optional)</label>
+                      <textarea
+                        id="invite-message"
+                        value={inviteMessage}
+                        onChange={(e) => setInviteMessage(e.target.value)}
+                        placeholder="Add a personal message to your invite..."
+                        className="form-textarea"
+                        rows={3}
+                        disabled={inviteLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  {inviteError && (
+                    <div className="invite-error">
+                      <span>⚠️</span>
+                      {inviteError}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {!inviteSuccess && (
+              <div className="modal-footer">
+                <button 
+                  className="btn btn-outline"
+                  onClick={() => setShowInviteModal(false)}
+                  disabled={inviteLoading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={sendInvite}
+                  disabled={inviteLoading || !inviteName.trim() || !invitePhone.trim()}
+                >
+                  {inviteLoading ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} />
+                      Send Invite
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
