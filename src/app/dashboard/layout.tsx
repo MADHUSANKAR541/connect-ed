@@ -49,9 +49,6 @@ export default function DashboardLayout({
     <div className="dashboard-layout">
       {/* Simple Icon Sidebar */}
       <div className="sidebar icon-sidebar">
-        <div className="sidebar-header">
-          <h2 className="logo">CC</h2>
-        </div>
 
         <nav className="nav">
           {navItems.map((item) => {

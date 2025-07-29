@@ -5,7 +5,8 @@
   width: 80px;
   align-items: center;
   padding: 0;
-  overflow: visible; /* Allow tooltips to overflow */
+  overflow: visible;
+  /* Allow tooltips to overflow */
   box-sizing: border-box;
   position: fixed;
   top: 0;
@@ -87,7 +88,7 @@
 }
 
 .icon-sidebar .nav {
-  padding: 4px 0;
+  padding: 24px 0 4px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,7 +96,7 @@
   width: 100%;
   flex: 1;
   box-sizing: border-box;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .nav-item {
@@ -118,7 +119,8 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
+  /* Prevent shrinking */
   box-sizing: border-box;
   max-width: 100%;
 }
@@ -191,7 +193,8 @@
   padding: 4px;
   border-radius: 4px;
   justify-content: center;
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
+  /* Prevent shrinking */
   box-sizing: border-box;
   max-width: 100%;
 }
@@ -214,13 +217,13 @@
   .dashboard-layout .icon-sidebar {
     width: 60px;
   }
-  
+
   .icon-nav-item,
   .icon-logout-btn {
     width: 40px;
     height: 40px;
   }
-  
+
   .icon-nav-item svg,
   .icon-logout-btn svg {
     width: 20px;
@@ -233,29 +236,29 @@
     width: 100%;
     max-width: 320px;
   }
-  
+
   .sidebar-header {
     padding: 20px;
   }
-  
+
   .nav {
     padding: 20px 0;
   }
-  
+
   .nav-item {
     padding: 16px 20px;
     font-size: 16px;
   }
-  
+
   .nav-item svg {
     width: 22px;
     height: 22px;
   }
-  
+
   .sidebar-footer {
     padding: 20px;
   }
-  
+
   .logout-btn {
     padding: 16px;
     font-size: 16px;
@@ -266,29 +269,29 @@
   .sidebar {
     width: 100%;
   }
-  
+
   .sidebar-header {
     padding: 16px;
   }
-  
+
   .logo {
     font-size: 18px;
   }
-  
+
   .nav-item {
     padding: 14px 16px;
     font-size: 15px;
   }
-  
+
   .nav-item svg {
     width: 20px;
     height: 20px;
   }
-  
+
   .sidebar-footer {
     padding: 16px;
   }
-  
+
   .logout-btn {
     padding: 14px;
     font-size: 15px;
@@ -300,26 +303,27 @@
   .sidebar {
     overflow-y: auto;
   }
-  
+
   .sidebar-header {
     padding: 12px 24px;
   }
-  
+
   .nav {
     padding: 12px 0;
   }
-  
+
   .nav-item {
     padding: 8px 24px;
   }
-  
+
   .sidebar-footer {
     padding: 12px 24px;
   }
 }
 
 /* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
   .sidebar {
     backdrop-filter: blur(20px);
   }
@@ -330,11 +334,11 @@
   .sidebar {
     transition: none;
   }
-  
+
   .nav-item {
     transition: none;
   }
-  
+
   .logout-btn {
     transition: none;
   }
@@ -352,4 +356,4 @@
   .sidebar {
     display: none;
   }
-} 
+}

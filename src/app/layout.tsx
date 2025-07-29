@@ -8,8 +8,8 @@ import './globals.scss';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CampusConnect - Connect with Your Academic Community',
-  description: 'A modern campus networking platform connecting students, alumni, and professors.',
+  title: 'ConnectED - Connect with Your Academic Community',
+  description: 'A comprehensive college alumni-student networking platform',
 };
 
 export default function RootLayout({

@@ -1,276 +1,234 @@
-# CampusConnect
+# ConnectED
 
-A modern campus networking platform connecting students, alumni, and professors.
+A comprehensive college alumni-student networking platform built with Next.js 14, React 18, TypeScript, and Supabase. ConnectED facilitates meaningful connections between students, alumni, and professors through features like profile management, messaging, video calls, job postings, and referral systems.
 
 ## 🚀 Features
 
-- 👥 **Role-based Access**: Students, Alumni, Professors, and Admins
-- 🏫 **College-based Networking**: Connect within your institution
-- 💬 **Real-time Messaging**: In-app chat system
-- 📅 **Call Scheduling**: Schedule video/audio calls with mentors
-- 🎯 **Smart Matching**: Find mentors based on skills and interests
-- 📊 **Analytics**: Track connections and engagement
-- 🔔 **Notifications**: Real-time notification system
-- 📹 **Video Conferencing**: Integrated Jitsi Meet for video calls
-- 👤 **Profile Management**: Comprehensive user profiles with experience, education, and achievements
-- 🤝 **Connection Management**: Accept/reject connection requests with messaging
+### Core Functionality
+- **Multi-Role Authentication**: Support for Students, Alumni, Professors, and Admins
+- **Profile Management**: Comprehensive user profiles with role-specific fields
+- **Connection System**: Send/accept connection requests between users
+- **Real-time Messaging**: Direct messaging between connected users
+- **Video Calls**: Integrated Jitsi Meet for face-to-face conversations
+- **Job Board**: Alumni can post jobs, students can request referrals
+- **Admin Dashboard**: User management and platform oversight
+
+### Role-Specific Features
+- **Students**: Browse jobs, request referrals, connect with alumni
+- **Alumni**: Post job opportunities, manage referral requests, mentor students
+- **Professors**: Academic guidance and student support
+- **Admins**: Platform management and user oversight
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript, SCSS
-- **Backend**: Next.js API Routes
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js
-- **Video Calls**: Jitsi Meet
-- **Styling**: Custom SCSS with CSS Variables
-- **Animations**: Framer Motion
-
-## 📋 Prerequisites
-
-- Node.js 18+
-- PostgreSQL
-
-## ⚡ Quick Start
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Environment Configuration
-
-Copy the environment file and configure your variables:
-
-```bash
-cp env.example .env.local
-```
-
-Update the following variables:
-- `DATABASE_URL`: Your PostgreSQL connection string
-- `NEXTAUTH_SECRET`: Generate a random secret
-- `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: For Google OAuth
-
-### 3. Database Setup
-
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run database migrations
-npx prisma db push
-
-# Seed the database (optional)
-npx prisma db seed
-```
-
-### 4. Start Development Server
-
-```bash
-npm run dev
-```
-
-Visit [http://localhost:3000](http://localhost:3000) to see the application.
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
+- **Styling**: SCSS, CSS Variables, Framer Motion
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Authentication**: NextAuth.js with Google OAuth
+- **Video Calls**: Jitsi Meet Integration
+- **Icons**: Lucide React
+- **Deployment**: Vercel-ready
 
 ## 📁 Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   │   ├── auth/          # Authentication APIs
-│   │   ├── calls/         # Call management APIs
-│   │   ├── connections/   # Connection APIs
-│   │   ├── messages/      # Messaging APIs
-│   │   ├── notifications/ # Notification APIs
-│   │   ├── onboarding/    # Onboarding API
-│   │   ├── profile/       # Profile management APIs
-│   │   └── users/         # User management APIs
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Dashboard pages
-│   │   ├── calls/         # Call management
-│   │   ├── connections/   # Connection management
-│   │   ├── explore/       # User discovery
-│   │   ├── insights/      # Analytics
-│   │   ├── messages/      # Messaging
-│   │   └── notifications/ # Notifications
-│   ├── onboarding/        # User onboarding
-│   └── profile/           # Profile pages
-├── components/            # Reusable components
-│   └── VideoCall.tsx     # Video conferencing component
-├── lib/                   # Utility libraries
-│   ├── auth.ts           # NextAuth configuration
-│   └── db.ts             # Database connection
-├── styles/                # SCSS stylesheets
-└── types/                 # TypeScript types
+connect-ed/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── api/               # API routes
+│   │   ├── auth/              # Authentication pages
+│   │   ├── dashboard/         # Main dashboard pages
+│   │   ├── onboarding/        # User onboarding
+│   │   └── admin/             # Admin dashboard
+│   ├── components/            # Reusable React components
+│   ├── lib/                   # Utility libraries
+│   ├── styles/                # SCSS stylesheets
+│   └── types/                 # TypeScript type definitions
+├── database-migration.sql     # Database schema
+├── jobs-migration.sql         # Job board database schema
+└── package.json              # Dependencies and scripts
 ```
 
-## 🎯 Features Overview
+## 🚀 Getting Started
 
-### 🔐 Authentication & Onboarding
-- Email/password and Google OAuth authentication
-- Role-based registration (Student, Alumni, Professor)
-- Complete onboarding flow with profile setup
-- College verification system
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- Google OAuth credentials
 
-### 👤 User Management
-- Comprehensive profile management
-- Experience, education, and achievements tracking
-- Privacy controls for profile visibility
-- College-based user organization
-- Skills and interests management
+### Installation
 
-### 🤝 Networking Features
-- Connection requests with approval workflow
-- Real-time messaging system
-- Video calling with Jitsi Meet integration
-- Connection analytics and insights
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd connect-ed
+   ```
 
-### 💬 Communication
-- In-app messaging between connected users
-- Call scheduling with approval workflow
-- Video/audio conferencing capabilities
-- Real-time notification system
-- Message read receipts
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### 📊 Analytics & Insights
-- User activity tracking
-- Connection analytics
-- College performance metrics
-- Skill trend analysis
-- Profile view statistics
+3. **Set up environment variables**
+   Create a `.env.local` file:
+   ```env
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-## 🔌 API Endpoints
+   # NextAuth.js
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret
+
+   # Google OAuth
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   ```
+
+4. **Set up the database**
+   - Run the SQL scripts in `database-migration.sql`
+   - Run the SQL scripts in `jobs-migration.sql`
+   - Configure Supabase storage buckets
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to `http://localhost:3000`
+
+## 📊 Database Schema
+
+### Core Tables
+- **users**: User profiles with role-specific fields
+- **colleges**: College/university information
+- **connections**: User connection relationships
+- **messages**: Direct messages between users
+- **call_requests**: Video call scheduling
+- **jobs**: Job postings by alumni
+- **referral_requests**: Student referral requests
+
+### Role-Specific Fields
+- **Students**: current_year, graduation_year, cgpa, department
+- **Alumni**: company, position, experience_years, industry
+- **Professors**: department, designation, research_areas
+- **Admins**: permissions, access_level
+
+## 🔐 Authentication & Security
+
+- **NextAuth.js**: JWT-based authentication
+- **Google OAuth**: Social login integration
+- **Row Level Security**: Supabase RLS policies
+- **Role-based Access**: Different features per user role
+- **Session Management**: Secure session handling
+
+## 🎨 UI/UX Features
+
+- **Responsive Design**: Mobile-first approach
+- **Dark/Light Theme**: Theme switching capability
+- **Smooth Animations**: Framer Motion integration
+- **Modern Icons**: Lucide React icon library
+- **Accessibility**: WCAG compliant components
+
+## 📱 Key Pages
+
+### Public Pages
+- **Landing Page**: Platform overview and features
+- **Authentication**: Login/signup with role selection
+
+### Dashboard Pages
+- **Home**: User-specific overview and stats
+- **Connections**: Manage user connections
+- **Explore**: Discover and connect with users
+- **Messages**: Real-time messaging interface
+- **Calls**: Video call scheduling and management
+- **Jobs**: Job board and referral system
+- **Notifications**: User activity notifications
+- **Profile**: User profile management
+
+### Admin Pages
+- **User Management**: View and manage all users
+- **Platform Analytics**: Usage statistics and insights
+
+## 🔧 API Endpoints
 
 ### Authentication
 - `POST /api/auth/signup` - User registration
-- `GET /api/auth/[...nextauth]` - NextAuth.js routes
+- `GET /api/auth/check-status` - Session validation
 
-### Users
-- `GET /api/users` - Search and filter users
-- `POST /api/users` - Create user
+### Users & Profiles
+- `GET /api/users` - Search and fetch users
+- `GET /api/profile` - Get user profile
+- `PUT /api/profile` - Update user profile
+- `PUT /api/profile/education` - Update education details
+- `PUT /api/profile/experience` - Update experience details
 
 ### Connections
 - `GET /api/connections` - Get user connections
 - `POST /api/connections` - Send connection request
 - `PUT /api/connections/[id]` - Accept/reject connection
-- `DELETE /api/connections/[id]` - Delete connection
 
-### Messages
+### Messaging
 - `GET /api/messages` - Get conversation messages
-- `POST /api/messages` - Send message
+- `POST /api/messages` - Send new message
 
-### Calls
+### Video Calls
 - `GET /api/calls` - Get call requests
-- `POST /api/calls` - Schedule call
+- `POST /api/calls` - Schedule new call
 - `PUT /api/calls/[id]` - Update call status
 
-### Profile
-- `GET /api/profile` - Get user profile
-- `PUT /api/profile` - Update profile
-- `POST /api/onboarding` - Complete onboarding
-- `POST /api/profile/experience` - Add experience
-- `POST /api/profile/education` - Add education
+### Job Board
+- `GET /api/jobs` - Get job listings
+- `POST /api/jobs` - Create new job posting
+- `GET /api/jobs/my-jobs` - Get user's posted jobs
+- `GET /api/jobs/requests` - Get referral requests
+- `POST /api/jobs/requests` - Create referral request
+- `PUT /api/jobs/requests/[id]` - Update request status
 
-### Notifications
-- `GET /api/notifications` - Get user notifications
-- `PUT /api/notifications` - Mark notifications as read
-
-## 🗂 Database Schema
-
-### Core Models
-- **User**: Profile information, roles, college association
-- **College**: Institution information and settings
-- **Connection**: User relationships and status
-- **Message**: Communication between users
-- **CallRequest**: Scheduled calls and meetings
-- **Notification**: User notifications and alerts
-- **Experience**: Work experience entries
-- **Education**: Educational background
-- **Achievement**: User achievements and awards
-- **UserSkill**: Skills and expertise levels
-
-## 🚀 Development
-
-### Adding New Features
-
-1. Create API routes in `src/app/api/`
-2. Add database models in `prisma/schema.prisma`
-3. Create React components in `src/components/`
-4. Add styles in `src/styles/`
-5. Update navigation in `src/app/dashboard/layout.tsx`
-
-### Database Migrations
-
-```bash
-# Create a new migration
-npx prisma migrate dev --name feature_name
-
-# Apply migrations
-npx prisma migrate deploy
-
-# Reset database (development only)
-npx prisma migrate reset
-```
-
-### Video Conferencing
-
-The platform uses Jitsi Meet for video conferencing:
-- Integrated video call component
-- Room-based calling system
-- Audio/video controls
-- Participant management
+### Admin
+- `GET /api/users/[id]/approve` - Approve user registration
+- `GET /api/users/[id]/reject` - Reject user registration
 
 ## 🚀 Deployment
 
-### Environment Variables
+### Vercel Deployment
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-Make sure to set all required environment variables in production:
-
-```bash
-DATABASE_URL=postgresql://...
-NEXTAUTH_SECRET=your_secret_key
-NEXTAUTH_URL=http://localhost:3000
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-### Build and Deploy
-
-```bash
-npm run build
-npm start
-```
-
-## 🧪 Testing
-
-```bash
-# Run linting
-npm run lint
-
-# Type checking
-npx tsc --noEmit
+### Environment Variables for Production
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=your_production_secret
+GOOGLE_CLIENT_ID=your_production_google_client_id
+GOOGLE_CLIENT_SECRET=your_production_google_client_secret
 ```
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🏘 Support
+## 🙏 Acknowledgments
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the API endpoints
+- **Next.js Team** for the amazing framework
+- **Supabase Team** for the backend infrastructure
+- **Vercel Team** for deployment platform
+- **Jitsi Team** for video calling integration
 
 ---
 
-**CampusConnect** - Connecting academic communities through meaningful relationships and professional development opportunities.
+**ConnectED** - Connecting academic communities through meaningful relationships and professional development opportunities.

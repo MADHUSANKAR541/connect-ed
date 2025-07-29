@@ -12,10 +12,12 @@ import {
   ArrowRight,
   Play,
   Globe,
-  Lock
+  Lock,
+  BarChart3
 } from 'lucide-react';
 import '../styles/landing.scss';
 import { ScrollAnimations } from '../components/ScrollAnimations';
+import Link from 'next/link';
 
 export default function LandingPage() {
   const scrollToAuth = (tab: 'login' | 'signup' = 'login') => {
@@ -86,7 +88,7 @@ export default function LandingPage() {
       <header className="header">
         <div className="header-content">
           <div className="logo">
-            <h2>CampusConnect</h2>
+            <h2>ConnectED</h2>
           </div>
           <nav className="nav">
             <button className="nav-btn" onClick={() => scrollToAuth('login')}>Login</button>
@@ -106,17 +108,19 @@ export default function LandingPage() {
             {...({} as any)}
           >
             <h1 className="hero-title">
-              Bridge the Gap Between 
-              <span className="gradient-text"> Campus and Career</span>
+              Connect with Your <span className="highlight">Academic Community</span>
             </h1>
             <p className="hero-subtitle">
-              A role-based platform connecting students, alumni, and professors across verified institutions.
+              Join ConnectED to build meaningful relationships with students, alumni, and professors. 
+              Share experiences, find mentors, and grow your professional network.
             </p>
             <div className="hero-actions">
-              <button className="cta-btn primary" onClick={() => scrollToAuth('signup')}>
+              <Link href="/auth" className="btn btn-primary">
                 Get Started
-                <ArrowRight size={20} />
-              </button>
+              </Link>
+              <Link href="#features" className="btn btn-outline">
+                Learn More
+              </Link>
             </div>
           </motion.div>
           
@@ -299,9 +303,9 @@ export default function LandingPage() {
       <footer className="footer">
         <div className="container">
           <div className="footer-content">
-            <div className="footer-brand">
-              <h3>CampusConnect</h3>
-              <p>Connecting academic communities</p>
+            <div className="footer-section">
+              <h3>ConnectED</h3>
+              <p>Connecting academic communities through meaningful relationships and professional development opportunities.</p>
             </div>
             <div className="footer-links">
               <a href="#">About</a>
@@ -311,7 +315,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 CampusConnect. All rights reserved.</p>
+            <p>&copy; 2025 ConnectED. All rights reserved.</p>
           </div>
         </div>
       </footer>

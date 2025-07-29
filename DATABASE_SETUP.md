@@ -1,7 +1,8 @@
-# Database Setup for CampusConnect
+# Database Setup for ConnectED
 
 ## Overview
-This document explains how to set up the database for CampusConnect with all the role-specific fields for the onboarding process.
+
+This document explains how to set up the database for ConnectED with all the role-specific fields for the onboarding process.
 
 ## Database Migration
 

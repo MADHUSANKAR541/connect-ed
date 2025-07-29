@@ -481,7 +481,7 @@ export default function CallsPage() {
       {/* Video Call Component */}
       {showVideoCall && currentCall && (
         <VideoCall
-          roomName={`campusconnect-call-${currentCall.id}`}
+          roomName={`connected-call-${currentCall.id}`}
           userName={session?.user?.name || 'User'}
           onClose={() => setShowVideoCall(false)}
           isOpen={showVideoCall}

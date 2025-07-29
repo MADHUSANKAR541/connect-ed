@@ -1,6 +1,8 @@
-# Job Board Module - CampusConnect
+# Job Board Module - ConnectED
 
-A comprehensive referral-based job board system that connects students with alumni for job opportunities and referrals.
+## Overview
+
+The Job Board module is a comprehensive referral-based job posting system designed specifically for ConnectED, enabling alumni to post job opportunities and students to request referrals seamlessly.
 
 ## 🎯 Features
 

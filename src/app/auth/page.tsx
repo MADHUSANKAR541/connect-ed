@@ -130,8 +130,10 @@ export default function AuthPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="auth-title">CampusConnect</h1>
-        <p className="auth-subtitle">Connect with your academic community</p>
+        <div className="auth-header">
+          <h1 className="auth-title">ConnectED</h1>
+          <p className="auth-subtitle">Join your academic community</p>
+        </div>
 
         <div className="tab-container">
           <div 
