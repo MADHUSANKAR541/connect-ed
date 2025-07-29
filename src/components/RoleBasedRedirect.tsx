@@ -31,8 +31,9 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
       const defaultRoute = roleRoutes[userRole as keyof typeof roleRoutes] || '/dashboard';
 
       // If user is on the auth page and authenticated, redirect to their role-specific route
-      if (currentPath === '/auth' || currentPath === '/') {
-        // Check if user is new (not verified) and redirect accordingly
+      // Note: Auth page handles its own redirects for signup/login, so we don't override here
+      if (currentPath === '/') {
+        // Only redirect from landing page, not from auth page
         if (!isVerified) {
           router.push('/wait-for-approval');
         } else {

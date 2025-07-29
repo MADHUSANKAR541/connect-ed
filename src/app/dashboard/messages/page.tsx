@@ -20,24 +20,37 @@ import '../../../styles/messages.scss';
 
 interface Chat {
   id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  online: boolean;
-  role: string;
-  userId: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+  };
+  lastMessage?: {
+    content: string;
+    created_at: string;
+    is_read: boolean;
+  };
+  unreadCount: number;
 }
 
 interface Message {
   id: string;
-  sender: string;
   content: string;
-  time: string;
-  sent: boolean;
-  delivered: boolean;
-  read: boolean;
+  created_at: string;
+  is_read: boolean;
+  sender_id: string;
+  receiver_id: string;
+  sender?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  receiver?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
 }
 
 export default function MessagesPage() {
@@ -49,6 +62,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Remove mock data for demo
   // const mockChats: Chat[] = [
@@ -147,7 +161,6 @@ export default function MessagesPage() {
   // ];
 
   useEffect(() => {
-    // Load chats from API
     loadChats();
   }, []);
 
@@ -159,11 +172,27 @@ export default function MessagesPage() {
 
   const loadChats = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Replace with actual API call
-      setChats([]);
+      // Load accepted connections to create chat list
+      const response = await fetch('/api/connections?status=accepted');
+      const data = await response.json();
+
+      if (response.ok) {
+        // Transform connections into chats
+        const chatList = data.connections?.map((connection: any) => ({
+          id: connection.user.id,
+          user: connection.user,
+          lastMessage: undefined, // Will be loaded separately
+          unreadCount: 0 // Will be calculated separately
+        })) || [];
+        setChats(chatList);
+      } else {
+        setError(data.error || 'Failed to load chats');
+      }
     } catch (error) {
       console.error('Error loading chats:', error);
+      setError('Failed to load chats');
     } finally {
       setLoading(false);
     }
@@ -171,11 +200,14 @@ export default function MessagesPage() {
 
   const loadMessages = async (chatId: string) => {
     try {
-      // For now, use mock data
-      // const response = await fetch(`/api/messages?userId=${chatId}`);
-      // const data = await response.json();
-      // setMessages(data.messages);
-      setMessages([]);
+      const response = await fetch(`/api/messages?userId=${session?.user?.id}&otherUserId=${chatId}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessages(data.messages || []);
+      } else {
+        console.error('Failed to load messages:', data.error);
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
     }
@@ -187,11 +219,11 @@ export default function MessagesPage() {
 
     setSending(true);
     try {
-      // Send message to API
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          senderId: session?.user?.id,
           receiverId: selectedChat,
           content: message,
         }),
@@ -201,12 +233,11 @@ export default function MessagesPage() {
         const newMessage = await response.json();
         setMessages(prev => [...prev, {
           id: newMessage.id,
-          sender: 'You',
           content: message,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          sent: true,
-          delivered: true,
-          read: false
+          created_at: new Date().toISOString(),
+          is_read: false,
+          sender_id: session?.user?.id || '',
+          receiver_id: selectedChat,
         }]);
         setMessage('');
       }
@@ -218,7 +249,7 @@ export default function MessagesPage() {
   };
 
   const filteredChats = chats.filter(chat =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    chat.user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedChatData = chats.find(chat => chat.id === selectedChat);
@@ -250,21 +281,22 @@ export default function MessagesPage() {
                 onClick={() => setSelectedChat(chat.id)}
               >
                 <div className="chat-avatar">
-                  <span>{chat.avatar}</span>
-                  {chat.online && <div className="online-indicator" />}
+                  <span>{chat.user.avatar}</span>
                 </div>
                 <div className="chat-info">
                   <div className="chat-header">
-                    <h3 className="chat-name">{chat.name}</h3>
-                    <span className="chat-time">{chat.time}</span>
+                    <h3 className="chat-name">{chat.user.name}</h3>
+                    <span className="chat-time">
+                      {chat.lastMessage ? new Date(chat.lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
                   </div>
                   <div className="chat-preview">
-                    <p className="last-message">{chat.lastMessage}</p>
-                    {chat.unread > 0 && (
-                      <span className="unread-badge">{chat.unread}</span>
+                    <p className="last-message">{chat.lastMessage?.content || 'No messages yet'}</p>
+                    {chat.unreadCount > 0 && (
+                      <span className="unread-badge">{chat.unreadCount}</span>
                     )}
                   </div>
-                  <span className="chat-role">{chat.role}</span>
+                  <span className="chat-role">{chat.user.role}</span>
                 </div>
               </div>
             ))}
@@ -278,12 +310,11 @@ export default function MessagesPage() {
               <div className="chat-header">
                 <div className="chat-user-info">
                   <div className="chat-avatar">
-                    <span>{selectedChatData.avatar}</span>
-                    {selectedChatData.online && <div className="online-indicator" />}
+                    <span>{selectedChatData.user.avatar}</span>
                   </div>
                   <div className="user-details">
-                    <h3 className="user-name">{selectedChatData.name}</h3>
-                    <span className="user-role">{selectedChatData.role}</span>
+                    <h3 className="user-name">{selectedChatData.user.name}</h3>
+                    <span className="user-role">{selectedChatData.user.role}</span>
                   </div>
                 </div>
                 <div className="chat-actions">
@@ -301,30 +332,33 @@ export default function MessagesPage() {
 
               <div className="messages-container">
                 <div className="messages-list">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`message ${msg.sent ? 'sent' : 'received'}`}
-                    >
-                      <div className="message-content">
-                        <p>{msg.content}</p>
-                        <div className="message-meta">
-                          <span className="message-time">{msg.time}</span>
-                          {msg.sent && (
-                            <div className="message-status">
-                              {msg.read ? (
-                                <CheckCheck size={14} className="read" />
-                              ) : msg.delivered ? (
-                                <CheckCheck size={14} className="delivered" />
-                              ) : (
-                                <Check size={14} className="sent" />
-                              )}
-                            </div>
-                          )}
+                  {messages.map((msg) => {
+                    const isSent = msg.sender_id === session?.user?.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`message ${isSent ? 'sent' : 'received'}`}
+                      >
+                        <div className="message-content">
+                          <p>{msg.content}</p>
+                          <div className="message-meta">
+                            <span className="message-time">
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {isSent && (
+                              <div className="message-status">
+                                {msg.is_read ? (
+                                  <CheckCheck size={14} className="read" />
+                                ) : (
+                                  <Check size={14} className="sent" />
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

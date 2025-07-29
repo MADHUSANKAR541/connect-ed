@@ -23,14 +23,36 @@ import '../../../styles/calls.scss';
 interface Call {
   id: string;
   title: string;
-  participants: string[];
-  date: string;
-  time: string;
+  description?: string;
+  scheduled_at: string;
   duration: number;
-  type: 'video' | 'audio';
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
-  senderId?: string;
-  receiverId?: string;
+  type: 'VIDEO' | 'AUDIO';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
+  sender_id: string;
+  receiver_id: string;
+  sender?: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+  };
+  receiver?: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+  };
+  isSender?: boolean;
+}
+
+interface Connection {
+  id: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: string;
+  };
 }
 
 export default function CallsPage() {
@@ -46,72 +68,51 @@ export default function CallsPage() {
   const [selectedReceiver, setSelectedReceiver] = useState('');
   const [loading, setLoading] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
-  const [currentCall, setCurrentCall] = useState<any>(null);
-
-  const upcomingCalls: Call[] = [
-    {
-      id: '1',
-      title: 'Career Guidance Session',
-      participants: ['John Doe', 'Sarah Wilson'],
-      date: '2024-01-15',
-      time: '14:00',
-      duration: 45,
-      type: 'video',
-      status: 'confirmed'
-    },
-    {
-      id: '2',
-      title: 'Project Discussion',
-      participants: ['Mike Johnson', 'Emily Brown'],
-      date: '2024-01-16',
-      time: '10:30',
-      duration: 30,
-      type: 'audio',
-      status: 'pending'
-    }
-  ];
-
-  const pastCalls: Call[] = [
-    {
-      id: '3',
-      title: 'Mentorship Session',
-      participants: ['Alex Chen', 'David Lee'],
-      date: '2024-01-10',
-      time: '16:00',
-      duration: 60,
-      type: 'video',
-      status: 'completed'
-    }
-  ];
-
-  const pendingRequests: Call[] = [
-    {
-      id: '4',
-      title: 'Resume Review Request',
-      participants: ['Lisa Wang'],
-      date: '2024-01-18',
-      time: '15:00',
-      duration: 30,
-      type: 'video',
-      status: 'pending'
-    }
-  ];
+  const [currentCall, setCurrentCall] = useState<Call | null>(null);
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCalls();
+    loadConnections();
   }, [activeTab]);
 
   const loadCalls = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // For now, use mock data
-      // const response = await fetch(`/api/calls?type=${activeTab}`);
-      // const data = await response.json();
-      // setCalls(data.calls);
+      const response = await fetch(`/api/calls?userId=${session?.user?.id}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        // Transform the calls to add isSender property
+        const transformedCalls = data.calls?.map((call: Call) => ({
+          ...call,
+          isSender: call.sender_id === session?.user?.id
+        })) || [];
+        setCalls(transformedCalls);
+      } else {
+        setError(data.error || 'Failed to load calls');
+      }
     } catch (error) {
       console.error('Error loading calls:', error);
+      setError('Failed to load calls');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadConnections = async () => {
+    try {
+      const response = await fetch('/api/connections?status=accepted');
+      const data = await response.json();
+
+      if (response.ok) {
+        setConnections(data.connections || []);
+      }
+    } catch (error) {
+      console.error('Error loading connections:', error);
     }
   };
 
@@ -130,6 +131,7 @@ export default function CallsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          senderId: session?.user?.id,
           receiverId: selectedReceiver,
           title: callTitle,
           description: callDescription,
@@ -179,26 +181,35 @@ export default function CallsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'var(--success)';
-      case 'pending': return 'var(--warning)';
-      case 'completed': return 'var(--muted)';
-      case 'cancelled': return 'var(--destructive)';
+      case 'ACCEPTED': return 'var(--success)';
+      case 'PENDING': return 'var(--warning)';
+      case 'COMPLETED': return 'var(--muted)';
+      case 'CANCELLED': return 'var(--destructive)';
+      case 'REJECTED': return 'var(--destructive)';
       default: return 'var(--muted)';
     }
   };
 
   const getTypeIcon = (type: string) => {
-    return type === 'video' ? <Video size={16} /> : <Phone size={16} />;
+    return type === 'VIDEO' ? <Video size={16} /> : <Phone size={16} />;
   };
 
   const getCurrentCalls = () => {
+    const now = new Date();
+    
     switch (activeTab) {
       case 'upcoming':
-        return upcomingCalls;
+        return calls.filter(call => {
+          const scheduledDate = new Date(call.scheduled_at);
+          return scheduledDate > now && call.status === 'ACCEPTED';
+        });
       case 'past':
-        return pastCalls;
+        return calls.filter(call => {
+          const scheduledDate = new Date(call.scheduled_at);
+          return scheduledDate < now && (call.status === 'COMPLETED' || call.status === 'CANCELLED');
+        });
       case 'requests':
-        return pendingRequests;
+        return calls.filter(call => call.status === 'PENDING' && !call.isSender);
       default:
         return [];
     }
@@ -271,21 +282,21 @@ export default function CallsPage() {
                   <div className="call-info">
                     <div className="info-item">
                       <Calendar size={14} />
-                      <span>{call.date}</span>
+                      <span>{new Date(call.scheduled_at).toLocaleDateString()}</span>
                     </div>
                     <div className="info-item">
                       <Clock size={14} />
-                      <span>{call.time} ({call.duration} min)</span>
+                      <span>{new Date(call.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} ({call.duration} min)</span>
                     </div>
                     <div className="info-item">
                       <Users size={14} />
-                      <span>{call.participants.join(', ')}</span>
+                      <span>{call.isSender ? call.receiver?.name : call.sender?.name}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="call-actions">
-                  {activeTab === 'requests' && call.status === 'pending' && (
+                  {activeTab === 'requests' && call.status === 'PENDING' && (
                     <>
                       <button
                         className="btn btn-success"
@@ -303,7 +314,7 @@ export default function CallsPage() {
                       </button>
                     </>
                   )}
-                  {call.status === 'confirmed' && (
+                  {call.status === 'ACCEPTED' && (
                     <button 
                       className="btn btn-primary"
                       onClick={() => {
@@ -423,14 +434,19 @@ export default function CallsPage() {
               </div>
 
               <div className="form-group">
-                <label>Recipient Email</label>
-                <input
-                  type="email"
+                <label>Select Recipient</label>
+                <select
                   value={selectedReceiver}
                   onChange={(e) => setSelectedReceiver(e.target.value)}
-                  placeholder="Enter recipient email"
                   required
-                />
+                >
+                  <option value="">Choose a connection...</option>
+                  {connections.map((connection) => (
+                    <option key={connection.id} value={connection.user.id}>
+                      {connection.user.name} ({connection.user.role})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="modal-actions">

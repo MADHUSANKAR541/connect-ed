@@ -24,19 +24,25 @@ import '../../../styles/explore.scss';
 
 interface User {
   id: string;
-  name: string;
-  avatar: string;
-  role: string;
-  collegeName: string;
-  department: string;
-  batch: string;
-  skills: string[];
-  bio: string;
-  location: string;
-  rating: number;
-  connections: number;
-  isOnline: boolean;
-  isVerified: boolean;
+  name?: string;
+  avatar?: string;
+  role?: string;
+  college?: string;
+  colleges?: {
+    id: string;
+    name: string;
+    domain: string;
+  };
+  department?: string;
+  batch?: string;
+  skills?: string[];
+  bio?: string;
+  location?: string;
+  rating?: number;
+  connections?: number;
+  isOnline?: boolean;
+  isVerified?: boolean;
+  connectionStatus?: 'NONE' | 'PENDING' | 'ACCEPTED' | 'REJECTED';
   score?: number;
   highlights?: any;
 }
@@ -53,6 +59,11 @@ export default function ExplorePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [connectMessage, setConnectMessage] = useState('');
+
+
 
   const colleges = [
     'MIT', 'Harvard', 'Stanford', 'UC Berkeley', 'Yale', 'Princeton',
@@ -87,7 +98,7 @@ export default function ExplorePage() {
         elastic: 'true',
         q: searchQuery,
         role: selectedRole,
-        collegeId: selectedCollege,
+        collegeId: selectedCollege === 'all' ? '' : selectedCollege,
         skills: selectedSkills.join(','),
         page: resetPage ? '1' : page.toString(),
         limit: '20',
@@ -164,6 +175,48 @@ export default function ExplorePage() {
   const loadMore = () => {
     setPage(prev => prev + 1);
     searchUsers(false);
+  };
+
+  const handleConnect = (user: User) => {
+    setSelectedUser(user);
+    setConnectMessage('');
+    setShowConnectModal(true);
+  };
+
+  const sendConnectionRequest = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const response = await fetch('/api/connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: selectedUser.id,
+          message: connectMessage || 'I would like to connect with you!'
+        }),
+      });
+
+      if (response.ok) {
+        // Update the user's connection status in the local state
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === selectedUser.id 
+              ? { ...user, connectionStatus: 'PENDING' as const }
+              : user
+          )
+        );
+        setShowConnectModal(false);
+        setSelectedUser(null);
+        setConnectMessage('');
+        alert('Connection request sent successfully!');
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to send connection request');
+      }
+    } catch (error) {
+      console.error('Error sending connection request:', error);
+      alert('Failed to send connection request');
+    }
   };
 
   return (
@@ -338,59 +391,64 @@ export default function ExplorePage() {
             >
               <div className="user-header">
                 <div className="user-avatar">
-                  <span>{user.avatar}</span>
+                  <span>{user.avatar || 'U'}</span>
                   {user.isOnline && <div className="online-indicator" />}
                   {user.isVerified && <div className="verified-badge">✓</div>}
                 </div>
                 <div className="user-info">
-                  <h3 className="user-name">{user.name}</h3>
+                  <h3 className="user-name">{user.name || 'Unknown User'}</h3>
+                  <div className="user-college">{user.college || 'Unknown College'}</div>
                   <div className="user-meta">
-                    <span className="user-role">{user.role}</span>
-                    <span className="user-college">{user.collegeName}</span>
+                    <span className="user-role">{user.role || 'Unknown'}</span>
                   </div>
-                  <div className="user-location">
-                    <MapPin size={14} />
-                    <span>{user.location}</span>
+                  {user.location && (
+                    <div className="user-location">
+                      <MapPin size={14} />
+                      <span>{user.location}</span>
+                    </div>
+                  )}
+                </div>
+                                  <div className="user-rating">
+                    <Star size={16} />
+                    <span>{user.rating || 0}</span>
                   </div>
-                </div>
-                <div className="user-rating">
-                  <Star size={16} />
-                  <span>{user.rating}</span>
-                </div>
               </div>
 
-              <div className="user-bio">
-                <p>{user.bio}</p>
-              </div>
+
 
               <div className="user-skills">
-                {user.skills.slice(0, 3).map(skill => (
+                {(user.skills || []).slice(0, 3).map(skill => (
                   <span key={skill} className="skill-tag">
                     {skill}
                   </span>
                 ))}
-                {user.skills.length > 3 && (
+                {(user.skills || []).length > 3 && (
                   <span className="skill-tag more">
-                    +{user.skills.length - 3} more
+                    +{(user.skills || []).length - 3} more
                   </span>
                 )}
               </div>
 
-              <div className="user-stats">
-                <div className="stat">
-                  <Users size={14} />
-                  <span>{user.connections} connections</span>
+                              <div className="user-stats">
+                  <div className="stat">
+                    <Users size={14} />
+                    <span>{user.connections || 0} connections</span>
+                  </div>
+                  <div className="stat">
+                    <GraduationCap size={14} />
+                    <span>{user.batch || 'N/A'}</span>
+                  </div>
                 </div>
-                <div className="stat">
-                  <GraduationCap size={14} />
-                  <span>{user.batch}</span>
-                </div>
-              </div>
 
               <div className="user-actions">
-                <button className="btn btn-primary">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => handleConnect(user)}
+                  disabled={user.connectionStatus === 'PENDING' || user.connectionStatus === 'ACCEPTED'}
+                >
                   <UserPlus size={16} />
-                  Connect
+                  {user.connectionStatus === 'PENDING' ? 'Request Sent' : 
+                   user.connectionStatus === 'ACCEPTED' ? 'Connected' : 'Connect'}
                 </button>
                 <button className="btn btn-outline">
                   <MessageSquare size={16} />
@@ -436,6 +494,58 @@ export default function ExplorePage() {
           </div>
         )}
       </div>
+
+      {/* Connection Modal */}
+      {showConnectModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowConnectModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Send Connection Request</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowConnectModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="user-preview">
+                <div className="user-avatar">
+                  <span>{selectedUser.avatar}</span>
+                </div>
+                                  <div className="user-info">
+                    <h4>{selectedUser.name}</h4>
+                    <p>{selectedUser.role} • {selectedUser.college}</p>
+                  </div>
+              </div>
+              <div className="message-section">
+                <label htmlFor="connect-message">Message (optional):</label>
+                <textarea
+                  id="connect-message"
+                  value={connectMessage}
+                  onChange={(e) => setConnectMessage(e.target.value)}
+                  placeholder="Add a personal message to your connection request..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowConnectModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={sendConnectionRequest}
+              >
+                Send Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

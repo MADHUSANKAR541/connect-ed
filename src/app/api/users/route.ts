@@ -17,11 +17,6 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select(`
         *,
-        colleges (
-          id,
-          name,
-          domain
-        ),
         user_skills (
           skill,
           level,
@@ -34,8 +29,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('role', role);
     }
 
-    if (collegeId && collegeId !== 'all') {
-      query = query.eq('college_id', collegeId);
+    if (collegeId && collegeId !== 'all' && collegeId !== '') {
+      query = query.eq('college', collegeId);
     }
 
     if (status) {

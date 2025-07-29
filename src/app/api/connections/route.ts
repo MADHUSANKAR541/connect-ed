@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 // GET /api/connections - Get user's connections
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
@@ -20,11 +31,6 @@ export async function GET(request: NextRequest) {
             id,
             name,
             domain
-          ),
-          user_skills (
-            skill,
-            level,
-            category
           )
         ),
         receiver:users!connections_receiver_id_fkey (
@@ -33,23 +39,20 @@ export async function GET(request: NextRequest) {
             id,
             name,
             domain
-          ),
-          user_skills (
-            skill,
-            level,
-            category
           )
         )
-      `);
+      `)
+      .or(`sender_id.eq.${session.user.id},receiver_id.eq.${session.user.id}`);
 
     if (status && status !== 'all') {
-      query = query.eq('status', status);
+      query = query.eq('status', status.toUpperCase());
     }
 
-    // Get total count
+    // Get total count for current user
     const { count } = await supabase
       .from('connections')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .or(`sender_id.eq.${session.user.id},receiver_id.eq.${session.user.id}`);
 
     // Get paginated results
     const { data: connections, error } = await query
@@ -64,9 +67,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform connections to show the other user
+    // Transform connections to show the other user and determine if current user is sender
     const transformedConnections = connections?.map(connection => {
-      const otherUser = connection.receiver;
+      const isSender = connection.sender_id === session.user.id;
+      const otherUser = isSender ? connection.receiver : connection.sender;
       
       return {
         id: connection.id,
@@ -74,8 +78,18 @@ export async function GET(request: NextRequest) {
         message: connection.message,
         createdAt: connection.created_at,
         updatedAt: connection.updated_at,
-        user: otherUser,
-        isSender: false,
+        user: {
+          id: otherUser.id,
+          name: otherUser.name,
+          avatar: otherUser.avatar,
+          role: otherUser.role,
+          college: otherUser.colleges?.name || 'Unknown College',
+          department: otherUser.department,
+          location: otherUser.location,
+          rating: otherUser.rating || 0,
+          isOnline: otherUser.is_online || false,
+        },
+        isSender,
       };
     }) || [];
 
@@ -100,6 +114,15 @@ export async function GET(request: NextRequest) {
 // POST /api/connections - Send connection request
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { receiverId, message } = body;
 
@@ -110,13 +133,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if connection already exists
+    const { data: existingConnection } = await supabase
+      .from('connections')
+      .select('*')
+      .or(`and(sender_id.eq.${session.user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${session.user.id})`)
+      .single();
+
+    if (existingConnection) {
+      return NextResponse.json(
+        { error: 'Connection already exists' },
+        { status: 409 }
+      );
+    }
+
     // Create connection request
     const { data: connection, error: connectionError } = await supabase
       .from('connections')
       .insert({
-        sender_id: 'test-sender-id', // Temporary for testing
+        sender_id: session.user.id,
         receiver_id: receiverId,
         message,
+        status: 'PENDING',
       })
       .select(`
         *,
