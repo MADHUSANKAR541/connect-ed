@@ -66,7 +66,7 @@ export default function NotificationsPage() {
   const markAsRead = async (notificationIds: string[]) => {
     try {
       const response = await fetch('/api/notifications', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationIds }),
       });
@@ -88,7 +88,7 @@ export default function NotificationsPage() {
   const markAllAsRead = async () => {
     try {
       const response = await fetch('/api/notifications', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ markAllAsRead: true }),
       });
@@ -111,6 +111,10 @@ export default function NotificationsPage() {
         return <MessageSquare size={16} />;
       case 'CALL_REQUEST':
         return <Calendar size={16} />;
+      case 'CALL_ACCEPTED':
+        return <Check size={16} />;
+      case 'CALL_REJECTED':
+        return <X size={16} />;
       case 'PROFILE_VIEW':
         return <Eye size={16} />;
       default:
@@ -126,6 +130,10 @@ export default function NotificationsPage() {
         return 'var(--success)';
       case 'CALL_REQUEST':
         return 'var(--warning)';
+      case 'CALL_ACCEPTED':
+        return 'var(--success)';
+      case 'CALL_REJECTED':
+        return 'var(--destructive)';
       case 'PROFILE_VIEW':
         return 'var(--info)';
       default:

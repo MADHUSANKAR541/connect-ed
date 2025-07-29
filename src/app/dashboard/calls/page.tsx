@@ -19,6 +19,7 @@ import {
 import { useSession } from 'next-auth/react';
 import VideoCall from '@/components/VideoCall';
 import '../../../styles/calls.scss';
+import '../../../styles/video-call.scss';
 
 interface Call {
   id: string;
@@ -82,7 +83,7 @@ export default function CallsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/calls?userId=${session?.user?.id}`);
+      const response = await fetch('/api/calls');
       const data = await response.json();
 
       if (response.ok) {
@@ -318,6 +319,13 @@ export default function CallsPage() {
                     <button 
                       className="btn btn-primary"
                       onClick={() => {
+                        console.log('Joining call:', call);
+                        console.log('Current user:', session?.user);
+                        console.log('Call participants:', {
+                          sender: call.sender,
+                          receiver: call.receiver,
+                          isSender: call.isSender
+                        });
                         setCurrentCall(call);
                         setShowVideoCall(true);
                       }}
@@ -473,7 +481,7 @@ export default function CallsPage() {
       {/* Video Call Component */}
       {showVideoCall && currentCall && (
         <VideoCall
-          roomName={`campusconnect-${currentCall.id}`}
+          roomName={`campusconnect-call-${currentCall.id}`}
           userName={session?.user?.name || 'User'}
           onClose={() => setShowVideoCall(false)}
           isOpen={showVideoCall}

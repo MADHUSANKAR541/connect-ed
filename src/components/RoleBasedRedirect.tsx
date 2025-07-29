@@ -53,7 +53,8 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
       }
 
       // If admin is trying to access dashboard, redirect to admin panel
-      if (currentPath.startsWith('/dashboard') && userRole === 'ADMIN') {
+      // But allow admins to access dashboard pages if they navigate directly
+      if (currentPath === '/dashboard' && userRole === 'ADMIN') {
         router.push('/admin');
       }
     }
