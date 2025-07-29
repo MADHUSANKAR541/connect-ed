@@ -321,7 +321,6 @@ export default function LandingPage() {
           <div className="footer-content">
             <div className="footer-section">
               <h3>ConnectED</h3>
-              <p>Connecting academic communities through meaningful relationships and professional development opportunities.</p>
             </div>
             <div className="footer-links">
               <a href="#">About</a>
