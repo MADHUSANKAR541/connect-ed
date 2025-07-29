@@ -106,7 +106,7 @@ export default function AdminPage() {
     .toUpperCase();
 
   const navItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: Home, label: "Dashboard", href: "/admin" },
     { icon: Users, label: "Connections", href: "/dashboard/connections" },
     { icon: Search, label: "Explore", href: "/dashboard/explore" },
     { icon: MessageSquare, label: "Messages", href: "/dashboard/messages" },
