@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Providers from '@/components/Providers';
-import SideHeaderWrapper from '@/components/SideHeaderWrapper';
 import RoleBasedRedirect from '@/components/RoleBasedRedirect';
 import './globals.scss';
+import '../styles/loading.scss';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,7 +23,6 @@ export default function RootLayout({
         <Providers>
           <RoleBasedRedirect>
             <div className="app-container">
-              <SideHeaderWrapper />
               {children}
             </div>
           </RoleBasedRedirect>

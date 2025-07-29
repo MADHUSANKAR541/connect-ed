@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from './LoadingSpinner';
 
 interface RoleBasedRedirectProps {
   children: React.ReactNode;
@@ -15,10 +16,21 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (status === 'authenticated' && session?.user?.role) {
+    // If user is not authenticated, don't apply any redirects
+    if (status === 'unauthenticated') {
+      return;
+    }
+
+    // Add a small delay to ensure session is fully established
+    const timeoutId = setTimeout(() => {
+      // Only apply redirects for authenticated users with complete session data
+      if (status === 'authenticated' && session?.user?.role && session?.user?.id) {
       const userRole = session.user.role;
       const isVerified = session.user.isVerified;
       const currentPath = window.location.pathname;
+
+      // Debug logging (remove in production)
+      // console.log('RoleBasedRedirect:', { userRole, isVerified, currentPath, sessionUser: session.user });
 
       // Define role-specific routes
       const roleRoutes = {
@@ -30,45 +42,38 @@ export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) 
 
       const defaultRoute = roleRoutes[userRole as keyof typeof roleRoutes] || '/dashboard';
 
-      // If user is on the auth page and authenticated, redirect to their role-specific route
-      // Note: Auth page handles its own redirects for signup/login, so we don't override here
+      // Handle role-based redirects
       if (currentPath === '/') {
-        // Only redirect from landing page, not from auth page
+        // If user is on the root path and authenticated, redirect to their role-specific route
         if (!isVerified) {
           router.push('/wait-for-approval');
         } else {
           router.push(defaultRoute);
         }
-      }
-
-      // If user is verified but hasn't completed onboarding, redirect to onboarding
-      if (isVerified && currentPath === '/wait-for-approval') {
+      } else if (isVerified && currentPath === '/wait-for-approval') {
+        // If user is verified but hasn't completed onboarding, redirect to onboarding
         router.push('/onboarding');
-        return;
-      }
-
-      // If user is trying to access admin page but is not admin, redirect to dashboard
-      if (currentPath.startsWith('/admin') && userRole !== 'ADMIN') {
+      } else if (currentPath.startsWith('/admin') && userRole !== 'ADMIN') {
+        // If user is trying to access admin page but is not admin, redirect to dashboard
         router.push('/dashboard');
-      }
-
-      // If admin is trying to access dashboard, redirect to admin panel
-      // But allow admins to access dashboard pages if they navigate directly
-      if (currentPath === '/dashboard' && userRole === 'ADMIN') {
+      } else if (userRole === 'ADMIN' && (currentPath === '/dashboard' || currentPath.startsWith('/dashboard/'))) {
+        // If admin is trying to access dashboard, redirect to admin panel
         router.push('/admin');
       }
     }
+    }, 100); // Small delay to ensure session is fully established
+
+    return () => clearTimeout(timeoutId);
   }, [session, status, router]);
 
-  // Show loading while checking authentication
-  if (status === 'loading') {
+  // Show loading while checking authentication or during session establishment
+  if (status === 'loading' || (status === 'authenticated' && (!session?.user?.role || !session?.user?.id))) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
+      <LoadingSpinner 
+        message="Checking your account details..." 
+        size="lg" 
+        variant="auth" 
+      />
     );
   }
 

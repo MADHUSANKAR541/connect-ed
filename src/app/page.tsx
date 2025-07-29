@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useSession, signOut } from 'next-auth/react';
 import { 
   Users, 
   MessageSquare, 
@@ -20,8 +21,14 @@ import { ScrollAnimations } from '../components/ScrollAnimations';
 import Link from 'next/link';
 
 export default function LandingPage() {
+  const { data: session } = useSession();
+  
   const scrollToAuth = (tab: 'login' | 'signup' = 'login') => {
     window.location.href = `/auth?tab=${tab}`;
+  };
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: '/' });
   };
 
   const roles = [
@@ -91,8 +98,17 @@ export default function LandingPage() {
             <h2>ConnectED</h2>
           </div>
           <nav className="nav">
-            <button className="nav-btn" onClick={() => scrollToAuth('login')}>Login</button>
-            <button className="nav-btn primary" onClick={() => scrollToAuth('signup')}>Sign Up</button>
+            {session ? (
+              <>
+                <span className="nav-text">Welcome, {session.user?.name}</span>
+                <button className="nav-btn" onClick={handleLogout}>Logout</button>
+              </>
+            ) : (
+              <>
+                <button className="nav-btn" onClick={() => scrollToAuth('login')}>Login</button>
+                <button className="nav-btn primary" onClick={() => scrollToAuth('signup')}>Sign Up</button>
+              </>
+            )}
           </nav>
         </div>
       </header>

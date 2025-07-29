@@ -70,6 +70,16 @@
   z-index: 50;
 }
 
+.top-bar-right {
+  flex: 1;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .menu-btn {
   display: flex;
   align-items: center;
@@ -164,40 +174,20 @@
 }
 
 @media (max-width: 767px) {
-  .sidebar {
-    width: 100%;
-    max-width: 320px;
+  .dashboard-layout .main-content {
+    margin-left: 0;
   }
   
-  .sidebar-header {
-    padding: 20px;
-  }
-  
-  .nav {
-    padding: 20px 0;
-  }
-  
-  .nav-item {
-    padding: 16px 20px;
-    font-size: 16px;
-  }
-  
-  .nav-item svg {
-    width: 22px;
-    height: 22px;
-  }
-  
-  .sidebar-footer {
-    padding: 20px;
-  }
-  
-  .logout-btn {
-    padding: 16px;
-    font-size: 16px;
-  }
-  
+  /* Adjust top-bar for mobile to avoid hamburger overlap */
   .top-bar {
     padding: 12px 16px;
+    padding-left: 80px; /* Make space for hamburger button */
+    flex-direction: row-reverse; /* Move user info to the right on mobile */
+  }
+  
+  /* Ensure user info stays on the right for mobile */
+  .user-info {
+    margin-left: auto; /* Push to the right on mobile */
   }
   
   .page-content {
@@ -339,5 +329,38 @@
   
   .page-content {
     padding: 0;
+  }
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 768px) {
+  .mobile-menu-btn {
+    display: none;
   }
 } 

@@ -42,6 +42,7 @@ import {
   Flag,
   Megaphone,
   Database,
+  Menu,
 } from "lucide-react";
 import "../../styles/admin.scss";
 import "../../styles/dashboard.scss";
@@ -65,6 +66,35 @@ export default function AdminPage() {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Handle click outside to close mobile sidebar
+  useEffect(() => {
+    if (!isMobile || !sidebarOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".sidebar") && !target.closest(".mobile-menu-btn")) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMobile, sidebarOpen]);
 
   // Get user data from session
   const userName = session?.user?.name || "User";
@@ -329,8 +359,22 @@ export default function AdminPage() {
 
   return (
     <div className="dashboard-layout">
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle menu"
+        >
+          <Menu size={24} />
+        </button>
+      )}
+
       {/* Simple Icon Sidebar */}
-      <div className="sidebar icon-sidebar">
+      <div className={`sidebar icon-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <h2 className="logo">CC</h2>
+        </div>
 
         <nav className="nav">
           {navItems.map((item) => {
@@ -365,9 +409,6 @@ export default function AdminPage() {
       <div className="main-content">
         {/* Top Bar */}
         <header className="top-bar">
-          <div className="top-bar-left">
-            {/* Empty div to push user info to the right */}
-          </div>
           <div className="user-info">
             <div className="avatar">
               <span>{userInitials}</span>
@@ -376,6 +417,9 @@ export default function AdminPage() {
               <span className="name">{userName}</span>
               <span className="role">{userRole}</span>
             </div>
+          </div>
+          <div className="top-bar-right">
+            {/* Space for future actions on the right */}
           </div>
         </header>
 
