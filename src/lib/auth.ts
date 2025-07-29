@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import { supabase } from './supabase';
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -62,6 +64,9 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       // Handle Google sign-in
@@ -77,9 +82,9 @@ export const authOptions: NextAuthOptions = {
           if (existingUser) {
             // Existing user - update their info and return true
             user.id = existingUser.id;
-            user.role = existingUser.role;
-            user.collegeId = existingUser.college_id;
-            user.isVerified = existingUser.is_verified;
+            user.role = existingUser.role || '';
+            user.collegeId = existingUser.college_id || '';
+            user.isVerified = existingUser.is_verified || false;
             return true;
           } else {
             // New user - create them in database
@@ -101,9 +106,9 @@ export const authOptions: NextAuthOptions = {
             }
 
             user.id = newUser.id;
-            user.role = newUser.role;
-            user.collegeId = newUser.college_id;
-            user.isVerified = newUser.is_verified;
+            user.role = newUser.role || '';
+            user.collegeId = newUser.college_id || '';
+            user.isVerified = newUser.is_verified || false;
             return true;
           }
         } catch (error) {
@@ -115,18 +120,18 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.collegeId = user.collegeId;
-        token.isVerified = user.isVerified;
+        token.role = user.role || '';
+        token.collegeId = user.collegeId || '';
+        token.isVerified = user.isVerified || false;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!;
-        session.user.role = token.role as string;
-        session.user.collegeId = token.collegeId as string;
-        session.user.isVerified = token.isVerified as boolean;
+      if (token && session.user) {
+        session.user.id = token.sub || '';
+        session.user.role = (token.role as string) || '';
+        session.user.collegeId = (token.collegeId as string) || '';
+        session.user.isVerified = (token.isVerified as boolean) || false;
       }
       return session;
     },
@@ -137,11 +142,16 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user, account }) {
-      // Update user's last active time in Supabase
-      await supabase
-        .from('users')
-        .update({ last_active: new Date().toISOString() })
-        .eq('id', user.id);
+      try {
+        // Update user's last active time in Supabase
+        await supabase
+          .from('users')
+          .update({ last_active: new Date().toISOString() })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error updating user last active time:', error);
+        // Don't fail the sign-in if this fails
+      }
     },
   },
 }; 
