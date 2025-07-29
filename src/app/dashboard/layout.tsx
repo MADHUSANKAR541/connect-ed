@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
@@ -27,6 +27,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const navItems = [
     { icon: Home, label: 'Dashboard', href: '/dashboard' },
@@ -45,10 +47,48 @@ export default function DashboardLayout({
   const userRole = session?.user?.role || 'Student';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle click outside to close mobile sidebar
+  useEffect(() => {
+    if (!isMobile || !sidebarOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.sidebar') && !target.closest('.mobile-menu-btn')) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile, sidebarOpen]);
+
   return (
     <div className="dashboard-layout">
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle menu"
+        >
+          <Menu size={24} />
+        </button>
+      )}
+
       {/* Simple Icon Sidebar */}
-      <div className="sidebar icon-sidebar">
+      <div className={`sidebar icon-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <h2 className="logo">CC</h2>
         </div>
@@ -88,6 +128,9 @@ export default function DashboardLayout({
               <span className="name">{userName}</span>
               <span className="role">{userRole}</span>
             </div>
+          </div>
+          <div className="top-bar-right">
+            {/* Space for future actions on the right */}
           </div>
         </header>
 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Users, Shield } from 'lucide-react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/auth.scss';
 
 export default function AuthPage() {
@@ -65,7 +66,38 @@ export default function AuthPage() {
         if (result?.error) {
           setError('Invalid email or password');
         } else {
-          router.push('/dashboard');
+          // Get the user session to check their role
+          const session = await getSession();
+          if (session?.user?.role) {
+            const userRole = session.user.role;
+            const isVerified = session.user.isVerified;
+            
+            // Check verification status first
+            if (!isVerified) {
+              router.push('/wait-for-approval');
+            } else {
+              // Redirect based on role
+              switch (userRole) {
+                case 'ADMIN':
+                  router.push('/admin');
+                  break;
+                case 'STUDENT':
+                  router.push('/dashboard');
+                  break;
+                case 'ALUMNI':
+                  router.push('/dashboard');
+                  break;
+                case 'PROFESSOR':
+                  router.push('/dashboard');
+                  break;
+                default:
+                  router.push('/dashboard');
+              }
+            }
+          } else {
+            // Fallback to landing page if session data is not available
+            router.push('/');
+          }
         }
       } else {
         // Handle signup
@@ -93,6 +125,7 @@ export default function AuthPage() {
           if (result?.error) {
             setError('Account created but login failed');
           } else {
+            // New signups always go to wait-for-approval for college verification
             router.push('/wait-for-approval');
           }
         }
@@ -107,9 +140,46 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      // For Google sign-in, let the RoleBasedRedirect handle the routing
-      // based on whether the user is new or existing
-      await signIn('google', { callbackUrl: '/dashboard' });
+      // For Google sign-in, we'll handle the redirect after sign-in
+      const result = await signIn('google', { redirect: false });
+      
+      if (result?.error) {
+        setError('Google sign-in failed');
+        setLoading(false);
+      } else {
+        // Get the user session to check their role
+        const session = await getSession();
+        if (session?.user?.role) {
+          const userRole = session.user.role;
+          const isVerified = session.user.isVerified;
+          
+          // Check verification status first
+          if (!isVerified) {
+            router.push('/wait-for-approval');
+          } else {
+            // Redirect based on role
+            switch (userRole) {
+              case 'ADMIN':
+                router.push('/admin');
+                break;
+              case 'STUDENT':
+                router.push('/dashboard');
+                break;
+              case 'ALUMNI':
+                router.push('/dashboard');
+                break;
+              case 'PROFESSOR':
+                router.push('/dashboard');
+                break;
+              default:
+                router.push('/dashboard');
+            }
+          }
+        } else {
+          // Fallback to landing page if session data is not available
+          router.push('/');
+        }
+      }
     } catch (error) {
       setError('Google sign-in failed');
       setLoading(false);
@@ -122,6 +192,17 @@ export default function AuthPage() {
     { id: 'PROFESSOR', label: 'Professor', icon: Shield }
   ];
 
+  // Show loading overlay when logging in
+  if (loading) {
+    return (
+      <LoadingSpinner 
+        message="Signing you in..." 
+        size="lg" 
+        variant="auth" 
+      />
+    );
+  }
+
   return (
     <div className="auth-container">
       <motion.div 
@@ -130,7 +211,7 @@ export default function AuthPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="auth-title">CampusConnect</h1>
+        <h1 className="auth-title">Connect-ed</h1>
         <p className="auth-subtitle">Connect with your academic community</p>
 
         <div className="tab-container">

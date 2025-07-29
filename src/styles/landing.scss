@@ -74,6 +74,13 @@
 .nav {
   display: flex;
   gap: 16px;
+  align-items: center;
+}
+
+.nav-text {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  margin-right: 8px;
 }
 
 .nav-btn {
