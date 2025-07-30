@@ -13,7 +13,8 @@ import {
   Smile,
   Mic,
   Check,
-  CheckCheck
+  CheckCheck,
+  ArrowLeft
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import '../../../styles/messages.scss';
@@ -67,6 +68,21 @@ export default function MessagesPage() {
   const [toxicity, setToxicity] = useState<{ label: string; score: number; feedback: string } | null>(null);
   const [toxicityLoading, setToxicityLoading] = useState(false);
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+
 
   // Remove mock data for demo
   // const mockChats: Chat[] = [
@@ -384,11 +400,14 @@ export default function MessagesPage() {
 
   return (
     <div className="messages-page">
-      <div className="messages-container">
+      <div className={`messages-container ${selectedChat ? 'has-selected-chat' : ''}`}>
+        
         {/* Chat List Sidebar */}
-        <div className="chat-sidebar">
+        <div className={`chat-sidebar`}>
           <div className="sidebar-header">
-            <h2>Messages</h2>
+            <div className="sidebar-header-content">
+              <h2>Messages</h2>
+            </div>
             <div className="search-container">
               <Search size={16} />
               <input
@@ -441,6 +460,14 @@ export default function MessagesPage() {
             <>
               <div className="chat-header chat-header-main">
                 <div className="chat-user-info">
+                  {isMobile && (
+                    <button 
+                      className="mobile-back-btn"
+                      onClick={() => setSelectedChat(null)}
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                  )}
                   <div className="chat-avatar large">
                     <span>{selectedChatData.user.avatar || selectedChatData.user.name?.[0] || '?'}</span>
                     {selectedChatData.user.isOnline && <span className="online-dot" />}
@@ -536,6 +563,13 @@ export default function MessagesPage() {
               <div className="no-chat-content">
                 <h3>Select a conversation</h3>
                 <p>Choose a chat from the sidebar to start messaging</p>
+                {isMobile && chats.length === 0 && (
+                  <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '14px', color: 'var(--muted-foreground)' }}>
+                      No conversations yet. Connect with other users to start messaging.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
