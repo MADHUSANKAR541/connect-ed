@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
         department,
         avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
         is_verified: false, // Always set to false for new users
+        profile_completed: false, // Always set to false for new users
       })
       .select()
       .single();

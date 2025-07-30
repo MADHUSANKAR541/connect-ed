@@ -201,13 +201,24 @@ export default function ProfilePage() {
         </div>
         <div className="header-actions">
           {!isEditing ? (
-            <button 
-              className="btn btn-primary"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit size={16} />
-              Edit Profile
-            </button>
+            <div className="action-buttons">
+              <button 
+                className="btn btn-primary"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit size={16} />
+                Edit Profile
+              </button>
+              {!userData?.profile_completed && (
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => window.location.href = '/onboarding'}
+                >
+                  <UserPlus size={16} />
+                  Complete Profile
+                </button>
+              )}
+            </div>
           ) : (
             <div className="edit-actions">
               <button 

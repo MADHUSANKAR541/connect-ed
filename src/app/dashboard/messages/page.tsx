@@ -66,6 +66,7 @@ export default function MessagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [toxicity, setToxicity] = useState<{ label: string; score: number; feedback: string } | null>(null);
   const [toxicityLoading, setToxicityLoading] = useState(false);
+  const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
 
   // Remove mock data for demo
   // const mockChats: Chat[] = [
@@ -173,6 +174,44 @@ export default function MessagesPage() {
     }
   }, [selectedChat]);
 
+  // Real-time message polling
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(() => {
+      if (selectedChat) {
+        loadMessages(selectedChat);
+      }
+      // Also refresh chat list to update last messages
+      loadChats();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [selectedChat, session?.user?.id]);
+
+  // Show notification for new messages
+  useEffect(() => {
+    const totalUnread = chats.reduce((total, chat) => total + chat.unreadCount, 0);
+    if (totalUnread > 0) {
+      // Update document title to show unread count
+      document.title = `(${totalUnread}) Messages - ConnectED`;
+      
+      // Play notification sound if unread count increased
+      if (totalUnread > previousUnreadCount && previousUnreadCount > 0) {
+        // Create a simple notification sound
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+        audio.volume = 0.3;
+        audio.play().catch(() => {
+          // Ignore errors if audio fails to play
+        });
+      }
+    } else {
+      document.title = 'Messages - ConnectED';
+    }
+    setPreviousUnreadCount(totalUnread);
+  }, [chats, previousUnreadCount]);
+
   useEffect(() => {
     if (!message.trim()) {
       setToxicity(null);
@@ -212,14 +251,45 @@ export default function MessagesPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Transform connections into chats
+        // Transform connections into chats and load their last messages
         const chatList = data.connections?.map((connection: any) => ({
           id: connection.user.id,
           user: connection.user,
           lastMessage: undefined, // Will be loaded separately
           unreadCount: 0 // Will be calculated separately
         })) || [];
+        
         setChats(chatList);
+        
+                  // Load last messages and unread counts for each chat
+          if (session?.user?.id) {
+            const chatPromises = chatList.map(async (chat: Chat) => {
+            try {
+              const messagesResponse = await fetch(`/api/messages?userId=${session.user.id}&otherUserId=${chat.id}`);
+              const messagesData = await messagesResponse.json();
+              
+              if (messagesResponse.ok && messagesData.messages) {
+                const messages = messagesData.messages;
+                const lastMessage = messages[messages.length - 1];
+                const unreadCount = messages.filter((msg: Message) => 
+                  msg.sender_id === chat.id && !msg.is_read
+                ).length;
+                
+                return {
+                  ...chat,
+                  lastMessage,
+                  unreadCount
+                };
+              }
+            } catch (error) {
+              console.error(`Error loading messages for chat ${chat.id}:`, error);
+            }
+            return chat;
+          });
+          
+          const updatedChats = await Promise.all(chatPromises);
+          setChats(updatedChats);
+        }
       } else {
         setError(data.error || 'Failed to load chats');
       }
@@ -238,11 +308,36 @@ export default function MessagesPage() {
 
       if (response.ok) {
         setMessages(data.messages || []);
+        
+        // Mark messages as read if they were sent by the other user
+        const unreadMessages = data.messages?.filter((msg: Message) => 
+          msg.sender_id === chatId && !msg.is_read
+        ) || [];
+        
+        if (unreadMessages.length > 0) {
+          markMessagesAsRead(unreadMessages.map((msg: Message) => msg.id));
+        }
       } else {
         console.error('Failed to load messages:', data.error);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
+    }
+  };
+
+  const markMessagesAsRead = async (messageIds: string[]) => {
+    try {
+      const response = await fetch('/api/messages/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageIds }),
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to mark messages as read');
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
     }
   };
 

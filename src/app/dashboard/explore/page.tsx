@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import '../../../styles/explore.scss';
 import { useSession } from 'next-auth/react';
-import styles from './page.module.scss';
+//import styles from './page.module.scss';
 
 interface User {
   id: string;
@@ -82,6 +82,7 @@ export default function ExplorePage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [currentUserCollege, setCurrentUserCollege] = useState<string>('');
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -175,6 +176,11 @@ export default function ExplorePage() {
 
   // Search users with database
   const searchUsers = async (resetPage = true) => {
+    if (!session?.user?.id) {
+      console.log('No session available, skipping search');
+      return;
+    }
+    
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -183,6 +189,7 @@ export default function ExplorePage() {
         collegeId: selectedCollege === 'all' ? '' : selectedCollege,
         page: resetPage ? '1' : page.toString(),
         limit: '20',
+        currentUserId: session.user.id,
       });
 
       const response = await fetch(`/api/users?${params}`);
@@ -214,6 +221,29 @@ export default function ExplorePage() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, selectedRole, selectedCollege]);
+
+  // Fetch current user's college information
+  useEffect(() => {
+    const fetchCurrentUserCollege = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/profile?userId=${session.user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.colleges?.name) {
+            setCurrentUserCollege(data.user.colleges.name);
+          } else if (data.user?.college) {
+            setCurrentUserCollege(data.user.college);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching current user college:', error);
+      }
+    };
+
+    fetchCurrentUserCollege();
+  }, [session?.user?.id]);
 
   useEffect(() => {
     // Try to use user's domain/interest for recommendations
@@ -353,7 +383,12 @@ export default function ExplorePage() {
     setShowInviteModal(true);
     setInviteName('');
     setInvitePhone('');
-    setInviteMessage('Hi! I found you on ConnectED and thought you might be interested in joining our platform. It\'s a great place for students, alumni, and professors to connect and network. Check it out! link : https://connect-ed-dqf7.vercel.app/');
+    
+    // Create personalized invite message with college name
+    const collegeText = currentUserCollege ? ` from ${currentUserCollege}` : '';
+    const inviteMessageText = `Hi! I${collegeText} found you on ConnectED and thought you might be interested in joining our platform. It's a great place for students, alumni, and professors to connect and network. Check it out! link : https://connect-ed-dqf7.vercel.app/`;
+    
+    setInviteMessage(inviteMessageText);
     setInviteError(null);
     setInviteSuccess(false);
   };
@@ -393,7 +428,7 @@ export default function ExplorePage() {
 
           
           <button 
-            className="ai-recommendation-btn"
+            className='ai-recommendation-btn'
             onClick={() => {
               setShowAiModal(true);
               getAiRecommendation();
@@ -515,49 +550,10 @@ export default function ExplorePage() {
               <div className="user-header">
                 <div className="user-avatar">
                   <span>{user.avatar || 'U'}</span>
-                  {user.isOnline && <div className="online-indicator" />}
-                  {user.isVerified && <div className="verified-badge">✓</div>}
                 </div>
                 <div className="user-info">
                   <h3 className="user-name">{user.name || 'Unknown User'}</h3>
-                  <div className="user-college">{user.college || 'Unknown College'}</div>
-                  <div className="user-meta">
-                    <span className="user-role">{user.role || 'Unknown'}</span>
-                  </div>
-                  {user.location && (
-                    <div className="user-location">
-                      <MapPin size={14} />
-                      <span>{user.location}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="user-rating">
-                  <Star size={16} />
-                  <span>{user.rating || 0}</span>
-                </div>
-              </div>
-
-              <div className="user-skills">
-                {(user.skills || []).slice(0, 3).map(skill => (
-                  <span key={skill} className="skill-tag">
-                    {skill}
-                  </span>
-                ))}
-                {(user.skills || []).length > 3 && (
-                  <span className="skill-tag more">
-                    +{(user.skills || []).length - 3} more
-                  </span>
-                )}
-              </div>
-
-              <div className="user-stats">
-                <div className="stat">
-                  <Users size={14} />
-                  <span>{user.connections || 0} connections</span>
-                </div>
-                <div className="stat">
-                  <GraduationCap size={14} />
-                  <span>{user.batch || 'N/A'}</span>
+                  <span className="user-role">{user.role || 'Unknown'}</span>
                 </div>
               </div>
 
@@ -570,14 +566,6 @@ export default function ExplorePage() {
                   <UserPlus size={16} />
                   {user.connectionStatus === 'PENDING' ? 'Request Sent' : 
                    user.connectionStatus === 'ACCEPTED' ? 'Connected' : 'Connect'}
-                </button>
-                <button className="btn btn-outline">
-                  <MessageSquare size={16} />
-                  Message
-                </button>
-                <button className="btn btn-outline">
-                  <Calendar size={16} />
-                  Schedule Call
                 </button>
                 <button className="btn btn-outline">
                   <Eye size={16} />
@@ -622,22 +610,7 @@ export default function ExplorePage() {
         )}
       </div>
 
-      {/* Alumni Recommendations */}
-      <div className={styles['alumni-recommendations']}>
-        <h2>Alumni Recommendations</h2>
-        {alumniLoading && <div>Loading recommendations...</div>}
-        {alumniError && <div className={styles.error}>{alumniError}</div>}
-        {alumniRecs && (
-          <div>
-            <div style={{ whiteSpace: 'pre-wrap', marginBottom: 8 }}>{alumniRecs.recommendation}</div>
-            <ul>
-              {alumniRecs.retrieved_alumni?.map((al: string, idx: number) => (
-                <li key={idx}>{al}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+
 
       {/* Connection Modal */}
       {showConnectModal && selectedUser && (
@@ -718,7 +691,7 @@ export default function ExplorePage() {
                   </div>
                 )}
                 {aiError && (
-                  <div className={styles.error}>
+                  <div className='error'>
                     <span>⚠️</span>
                     {aiError}
                   </div>

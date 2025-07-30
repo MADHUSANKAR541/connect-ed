@@ -20,6 +20,7 @@ import "../../styles/auth.scss";
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<
     "STUDENT" | "ALUMNI" | "PROFESSOR"
   >("STUDENT");
@@ -31,6 +32,7 @@ export default function AuthPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     name: "",
     college: "",
     department: "",
@@ -64,6 +66,13 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // Validate password confirmation for signup
+    if (activeTab === "signup" && formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (activeTab === "login") {
@@ -333,28 +342,55 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <div className="input-wrapper">
-              <Lock size={20} className="input-icon" />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                className="form-input"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
+                     <div className="form-group">
+             <label className="form-label">
+               {activeTab === "signup" ? "Create Password" : "Password"}
+             </label>
+             <div className="input-wrapper">
+               <Lock size={20} className="input-icon" />
+               <input
+                 type={showPassword ? "text" : "password"}
+                 name="password"
+                 className="form-input"
+                 placeholder={activeTab === "signup" ? "Create your password" : "Enter your password"}
+                 value={formData.password}
+                 onChange={handleInputChange}
+                 required
+               />
+               <button
+                 type="button"
+                 className="password-toggle"
+                 onClick={() => setShowPassword(!showPassword)}
+               >
+                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+               </button>
+             </div>
+           </div>
+
+           {activeTab === "signup" && (
+             <div className="form-group">
+               <label className="form-label">Confirm Password</label>
+               <div className="input-wrapper">
+                 <Lock size={20} className="input-icon" />
+                 <input
+                   type={showConfirmPassword ? "text" : "password"}
+                   name="confirmPassword"
+                   className="form-input"
+                   placeholder="Confirm your password"
+                   value={formData.confirmPassword}
+                   onChange={handleInputChange}
+                   required={activeTab === "signup"}
+                 />
+                 <button
+                   type="button"
+                   className="password-toggle"
+                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                 >
+                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                 </button>
+               </div>
+             </div>
+           )}
 
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading

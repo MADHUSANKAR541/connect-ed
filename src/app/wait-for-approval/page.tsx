@@ -11,18 +11,15 @@ export default function WaitForApprovalPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date>(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
 
-  useEffect(() => {
-    // If user is verified, redirect to onboarding
-    if (status === 'authenticated' && session?.user?.isVerified) {
-      router.push('/onboarding');
-    }
-  }, [session, status, router]);
-
-  const handleCheckStatus = async () => {
+  // Auto-refresh function
+  const checkStatus = async () => {
+    if (isChecking) return; // Prevent multiple simultaneous requests
+    
     setIsChecking(true);
     try {
-      // Check user's verification status in database
       const response = await fetch('/api/auth/check-status');
       const data = await response.json();
 
@@ -30,21 +27,49 @@ export default function WaitForApprovalPage() {
         if (data.isVerified) {
           // User is verified, redirect to onboarding
           router.push('/onboarding');
-        } else {
-          // User is still not verified, show message
-          alert('Your account is still pending approval. Please check back later.');
+          return;
         }
+        // Update last checked time
+        setLastChecked(new Date());
       } else {
         console.error('Error checking status:', data.error);
-        alert('Failed to check status. Please try again.');
       }
     } catch (error) {
       console.error('Error checking status:', error);
-      alert('Failed to check status. Please try again.');
     } finally {
       setIsChecking(false);
     }
   };
+
+  // Manual check function
+  const handleCheckStatus = async () => {
+    await checkStatus();
+  };
+
+  // Auto-refresh effect - check every 5 seconds
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+
+    const interval = setInterval(() => {
+      checkStatus();
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(interval);
+  }, [autoRefreshEnabled, isChecking]);
+
+  // Initial check when component mounts
+  useEffect(() => {
+    if (status === 'authenticated') {
+      checkStatus();
+    }
+  }, [status]);
+
+  // Redirect if already verified
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.isVerified) {
+      router.push('/onboarding');
+    }
+  }, [session, status, router]);
 
   if (status === 'loading') {
     return (
@@ -89,6 +114,20 @@ export default function WaitForApprovalPage() {
             <Users size={20} />
             <span>This process typically takes 24-48 hours</span>
           </div>
+          <div className="info-item">
+            <RefreshCw size={20} />
+            <span>Status automatically checks every 5 seconds</span>
+          </div>
+        </div>
+
+        <div className="auto-refresh-status">
+          <div className="status-indicator">
+            <div className={`status-dot ${autoRefreshEnabled ? 'active' : 'inactive'}`}></div>
+            <span>Auto-refresh: {autoRefreshEnabled ? 'Enabled' : 'Disabled'}</span>
+          </div>
+          <div className="last-checked">
+            Last checked: {lastChecked.toLocaleTimeString()}
+          </div>
         </div>
 
         <div className="approval-actions">
@@ -98,7 +137,14 @@ export default function WaitForApprovalPage() {
             disabled={isChecking}
           >
             <RefreshCw size={16} className={isChecking ? 'spinning' : ''} />
-            {isChecking ? 'Checking...' : 'Check Status'}
+            {isChecking ? 'Checking...' : 'Check Now'}
+          </button>
+          
+          <button 
+            className={`toggle-auto-refresh-btn ${autoRefreshEnabled ? 'enabled' : 'disabled'}`}
+            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+          >
+            {autoRefreshEnabled ? 'Disable' : 'Enable'} Auto-refresh
           </button>
           
           <button 

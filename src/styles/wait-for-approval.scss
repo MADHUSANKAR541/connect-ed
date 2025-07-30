@@ -66,6 +66,48 @@
   }
 }
 
+.auto-refresh-status {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--muted);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    
+    &.active {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    
+    &.inactive {
+      background: var(--muted-foreground);
+    }
+  }
+  
+  span {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+}
+
+.last-checked {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  opacity: 0.8;
+}
+
 .approval-actions {
   display: flex;
   flex-direction: column;
@@ -100,6 +142,46 @@
   
   .spinning {
     animation: spin 1s linear infinite;
+  }
+}
+
+.toggle-auto-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &.enabled {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+    
+    &:hover {
+      background: var(--success-hover);
+    }
+  }
+  
+  &.disabled {
+    background: var(--destructive);
+    color: white;
+    border-color: var(--destructive);
+    
+    &:hover {
+      background: var(--destructive-hover);
+    }
+  }
+  
+  &:hover {
+    transform: translateY(-1px);
   }
 }
 

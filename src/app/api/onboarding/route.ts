@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       role,
       linkedin,
       github,
+      isIncomplete, // New field for skip functionality
       // Student-specific fields
       currentYear,
       graduationYear,
@@ -29,54 +30,43 @@ export async function POST(request: NextRequest) {
       publications
     } = body;
     
-    if (!userId || !college || !role) {
-      console.log('Missing required fields:', { userId, college, role });
+    if (!userId || !role) {
+      console.log('Missing required fields:', { userId, role });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    
-    console.log('Looking for college:', college);
-    // Find or create college
-    let { data: collegeRecord, error: collegeError } = await supabase
-      .from('colleges')
-      .select('*')
-      .eq('name', college)
-      .single();
-      
-    if (collegeError) {
-      console.log('College lookup error:', collegeError);
-    }
-    
-    if (!collegeRecord) {
-      console.log('Creating new college:', college);
-      const timestamp = Date.now();
-      const uniqueDomain = `${college.toLowerCase().replace(/\s+/g, '')}-${timestamp}.edu`;
-      
-      const { data: newCollege, error: createCollegeError } = await supabase
-        .from('colleges')
-        .insert({
-          name: college,
-          domain: uniqueDomain,
-          status: 'ACTIVE',
+
+    // Handle skip functionality
+    if (isIncomplete) {
+      console.log('User skipped onboarding, marking as incomplete');
+      const { data: user, error: updateError } = await supabase
+        .from('users')
+        .update({
+          role,
+          profile_completed: false // Mark as incomplete
         })
+        .eq('id', userId)
         .select()
         .single();
         
-      if (createCollegeError) {
-        console.log('College creation error:', createCollegeError);
-        return NextResponse.json({ error: createCollegeError.message }, { status: 500 });
+      if (updateError) {
+        console.log('User update error:', updateError);
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
       
-      collegeRecord = newCollege;
+      return NextResponse.json({ user, skipped: true });
     }
+    
+    // Regular onboarding flow - college field is no longer required
+    console.log('Processing regular onboarding without college field');
     
     // Prepare user update data with role-specific fields
     const userUpdateData: any = {
-      college_id: collegeRecord.id,
       department,
       bio,
       role,
       linkedin: linkedin || null,
       github: github || null,
+      profile_completed: true // Mark as complete
     };
 
     // Add role-specific fields

@@ -96,6 +96,7 @@ export const authOptions: NextAuthOptions = {
                 avatar: user.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
                 is_verified: false, // New Google users need approval
                 role: 'STUDENT', // Default role, can be changed during onboarding
+                profile_completed: false, // New users start with incomplete profiles
               })
               .select()
               .single();

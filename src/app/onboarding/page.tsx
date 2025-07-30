@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, GraduationCap, MapPin, Calendar, Briefcase, Globe, Save, Users, Shield } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -9,12 +9,7 @@ import '../../styles/onboarding.scss';
 export default function OnboardingPage() {
   const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRole, setSelectedRole] = useState<'STUDENT' | 'ALUMNI' | 'PROFESSOR'>('STUDENT');
   const [formData, setFormData] = useState({
-    name: '',
-    college: '',
-    department: '',
-    batch: '',
     skills: '',
     interests: '',
     bio: '',
@@ -35,6 +30,9 @@ export default function OnboardingPage() {
     publications: ''
   });
 
+  // Get user role from session
+  const userRole = session?.user?.role || 'STUDENT';
+
   const roles = [
     { id: 'STUDENT', label: 'Student', icon: GraduationCap },
     { id: 'ALUMNI', label: 'Alumni', icon: Users },
@@ -50,7 +48,7 @@ export default function OnboardingPage() {
 
   const handleNext = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent form submission
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -71,29 +69,24 @@ export default function OnboardingPage() {
     }
     
     // Validate required fields for the current step
-    if (currentStep === 1 && (!formData.name || !formData.college || !formData.department)) {
-      alert('Please fill in all required fields in step 1');
-      return;
-    }
-    
-    if (currentStep === 2) {
+    if (currentStep === 1) {
       // Role-specific validation
-      if (selectedRole === 'STUDENT' && (!formData.currentYear || !formData.graduationYear)) {
+      if (userRole === 'STUDENT' && (!formData.currentYear || !formData.graduationYear)) {
         alert('Please fill in your current year and expected graduation year');
         return;
       }
-      if (selectedRole === 'ALUMNI' && (!formData.graduationYear || !formData.currentCompany || !formData.jobTitle || !formData.experienceYears)) {
+      if (userRole === 'ALUMNI' && (!formData.graduationYear || !formData.currentCompany || !formData.jobTitle || !formData.experienceYears)) {
         alert('Please fill in all required alumni fields');
         return;
       }
-      if (selectedRole === 'PROFESSOR' && (!formData.designation || !formData.teachingExperience || !formData.researchAreas)) {
+      if (userRole === 'PROFESSOR' && (!formData.designation || !formData.teachingExperience || !formData.researchAreas)) {
         alert('Please fill in all required professor fields');
         return;
       }
     }
     
     // Only submit if we're on the final step
-    if (currentStep !== 3) {
+    if (currentStep !== 2) {
       return;
     }
     
@@ -103,10 +96,8 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: session.user.id,
-          college: formData.college,
-          department: formData.department,
           bio: formData.bio,
-          role: selectedRole,
+          role: userRole,
           linkedin: formData.linkedin,
           github: formData.github,
           // Student-specific fields
@@ -138,10 +129,44 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleSkip = async () => {
+    if (!session?.user?.id) {
+      alert('Please log in to continue');
+      return;
+    }
+
+    try {
+      // Mark user as having incomplete profile
+      const response = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session.user.id,
+          isIncomplete: true,
+          role: userRole
+        }),
+      });
+
+      if (response.ok) {
+        // Redirect based on role
+        if (userRole === 'ALUMNI') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to skip onboarding');
+      }
+    } catch (error) {
+      console.error('Skip onboarding error:', error);
+      alert('Failed to skip onboarding');
+    }
+  };
+
   const steps = [
-    { number: 1, title: 'Basic Info', icon: User },
-    { number: 2, title: 'Academic', icon: GraduationCap },
-    { number: 3, title: 'Professional', icon: Briefcase }
+    { number: 1, title: 'Academic & Professional', icon: GraduationCap },
+    { number: 2, title: 'Personal & Social', icon: User }
   ];
 
   return (
@@ -150,6 +175,11 @@ export default function OnboardingPage() {
         <div className="header">
           <h1 className="title">Complete Your Profile</h1>
           <p className="subtitle">Help others discover and connect with you</p>
+          <div className="user-info">
+            <p><strong>Name:</strong> {session?.user?.name}</p>
+            <p><strong>Role:</strong> {userRole}</p>
+            <p><strong>Email:</strong> {session?.user?.email}</p>
+          </div>
         </div>
 
         <div className="progress">
@@ -167,7 +197,7 @@ export default function OnboardingPage() {
         </div>
 
         <form onSubmit={handleSubmit} onKeyDown={(e) => {
-          if (e.key === 'Enter' && currentStep < 3) {
+          if (e.key === 'Enter' && currentStep < 2) {
             e.preventDefault();
           }
         }}>
@@ -178,75 +208,8 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, x: -20 }}
               className="step-content"
             >
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-input"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Role</label>
-                <div className="role-selector">
-                  {roles.map((role) => {
-                    const Icon = role.icon;
-                    return (
-                      <div
-                        key={role.id}
-                        className={`role-option ${selectedRole === role.id ? 'active' : ''}`}
-                        onClick={() => setSelectedRole(role.id as 'STUDENT' | 'ALUMNI' | 'PROFESSOR')}
-                      >
-                        <Icon size={20} />
-                        <span>{role.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">College</label>
-                <input
-                  type="text"
-                  name="college"
-                  className="form-input"
-                  placeholder="Enter your college name"
-                  value={formData.college}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <input
-                  type="text"
-                  name="department"
-                  className="form-input"
-                  placeholder="Enter your department"
-                  value={formData.department}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {currentStep === 2 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="step-content"
-            >
               {/* Student-specific questions */}
-              {selectedRole === 'STUDENT' && (
+              {userRole === 'STUDENT' && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Current Year</label>
@@ -318,7 +281,7 @@ export default function OnboardingPage() {
               )}
 
               {/* Alumni-specific questions */}
-              {selectedRole === 'ALUMNI' && (
+              {userRole === 'ALUMNI' && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Graduation Year</label>
@@ -392,7 +355,7 @@ export default function OnboardingPage() {
               )}
 
               {/* Professor-specific questions */}
-              {selectedRole === 'PROFESSOR' && (
+              {userRole === 'PROFESSOR' && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Designation</label>
@@ -471,7 +434,7 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 2 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -529,7 +492,17 @@ export default function OnboardingPage() {
               </motion.button>
             )}
             
-            {currentStep < 3 ? (
+            <motion.button
+              type="button"
+              className="btn btn-skip"
+              onClick={handleSkip}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Skip for now
+            </motion.button>
+            
+            {currentStep < 2 ? (
               <motion.button
                 type="button"
                 className="btn btn-primary"

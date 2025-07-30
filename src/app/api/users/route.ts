@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const collegeId = searchParams.get('collegeId');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const currentUserId = searchParams.get('currentUserId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
@@ -43,6 +44,11 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,bio.ilike.%${search}%`);
+    }
+
+    // Exclude current user from results
+    if (currentUserId) {
+      query = query.neq('id', currentUserId);
     }
 
     // Get total count
