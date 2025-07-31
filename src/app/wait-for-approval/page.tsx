@@ -98,7 +98,7 @@ export default function WaitForApprovalPage() {
         
         <p className="approval-description">
           Your account is pending approval by an administrator.<br />
-          You will receive an email once your account is approved.
+          You will receive an email at your given email ID once the admin approves your account.
         </p>
 
         <div className="approval-info">
@@ -120,15 +120,7 @@ export default function WaitForApprovalPage() {
           </div>
         </div>
 
-        <div className="auto-refresh-status">
-          <div className="status-indicator">
-            <div className={`status-dot ${autoRefreshEnabled ? 'active' : 'inactive'}`}></div>
-            <span>Auto-refresh: {autoRefreshEnabled ? 'Enabled' : 'Disabled'}</span>
-          </div>
-          <div className="last-checked">
-            Last checked: {lastChecked.toLocaleTimeString()}
-          </div>
-        </div>
+        
 
         <div className="approval-actions">
           <button 
@@ -139,13 +131,8 @@ export default function WaitForApprovalPage() {
             <RefreshCw size={16} className={isChecking ? 'spinning' : ''} />
             {isChecking ? 'Checking...' : 'Check Now'}
           </button>
+      
           
-          <button 
-            className={`toggle-auto-refresh-btn ${autoRefreshEnabled ? 'enabled' : 'disabled'}`}
-            onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-          >
-            {autoRefreshEnabled ? 'Disable' : 'Enable'} Auto-refresh
-          </button>
           
           <button 
             className="logout-btn"
@@ -155,9 +142,7 @@ export default function WaitForApprovalPage() {
           </button>
         </div>
 
-        <div className="approval-footer">
-          <p>Need help? Contact your college administrator</p>
-        </div>
+        
       </motion.div>
     </div>
   );

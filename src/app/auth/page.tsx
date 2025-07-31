@@ -85,88 +85,13 @@ export default function AuthPage() {
 
         if (result?.error) {
           setError("Invalid email or password");
-        } else {
-          // Get the user session to check their role
-          const session = await getSession();
-          if (session?.user?.role) {
-            const userRole = session.user.role;
-            const isVerified = session.user.isVerified;
-
-            // Check verification status first
-            if (!isVerified) {
-              router.push("/wait-for-approval");
-            } else {
-              // Redirect based on role
-              switch (userRole) {
-                case "ADMIN":
-                  router.push("/admin");
-                  break;
-                case "STUDENT":
-                  router.push("/dashboard");
-                  break;
-                case "ALUMNI":
-                  router.push("/dashboard");
-                  break;
-                case "PROFESSOR":
-                  router.push("/dashboard");
-                  break;
-                default:
-                  router.push("/dashboard");
-              }
-            }
-          } else {
-            // Fallback to landing page if session data is not available
-            router.push("/");
-          }
+          setLoading(false);
+          return;
         }
-      } else {
-        // Handle signup
-        const response = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            role: selectedRole,
-          }),
-        });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.error || "Signup failed");
-        } else {
-          // Auto-login after signup
-          const result = await signIn("credentials", {
-            email: formData.email,
-            password: formData.password,
-            redirect: false,
-          });
-
-          if (result?.error) {
-            setError("Account created but login failed");
-          } else {
-            // New signups always go to wait-for-approval for college verification
-            router.push("/wait-for-approval");
-          }
-        }
-      }
-    } catch (error) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      // For Google sign-in, we'll handle the redirect after sign-in
-      const result = await signIn("google", { redirect: false });
-
-      if (result?.error) {
-        setError("Google sign-in failed");
-        setLoading(false);
-      } else {
+        // Wait a bit for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Get the user session to check their role
         const session = await getSession();
         if (session?.user?.role) {
@@ -199,11 +124,103 @@ export default function AuthPage() {
           // Fallback to landing page if session data is not available
           router.push("/");
         }
+      } else {
+        // Handle signup
+        const response = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            role: selectedRole,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || "Signup failed");
+          setLoading(false);
+          return;
+        }
+
+        // Auto-login after signup
+        const result = await signIn("credentials", {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError("Account created but login failed");
+          setLoading(false);
+          return;
+        }
+
+        // Wait a bit for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // New signups always go to wait-for-approval for college verification
+        router.push("/wait-for-approval");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+      setLoading(false);
+    }
+    // Don't set loading to false here - let the redirect happen while loading
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      // For Google sign-in, we'll handle the redirect after sign-in
+      const result = await signIn("google", { redirect: false });
+
+      if (result?.error) {
+        setError("Google sign-in failed");
+        setLoading(false);
+        return;
+      }
+
+      // Wait a bit for the session to be established
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Get the user session to check their role
+      const session = await getSession();
+      if (session?.user?.role) {
+        const userRole = session.user.role;
+        const isVerified = session.user.isVerified;
+
+        // Check verification status first
+        if (!isVerified) {
+          router.push("/wait-for-approval");
+        } else {
+          // Redirect based on role
+          switch (userRole) {
+            case "ADMIN":
+              router.push("/admin");
+              break;
+            case "STUDENT":
+              router.push("/dashboard");
+              break;
+            case "ALUMNI":
+              router.push("/dashboard");
+              break;
+            case "PROFESSOR":
+              router.push("/dashboard");
+              break;
+            default:
+              router.push("/dashboard");
+          }
+        }
+      } else {
+        // Fallback to landing page if session data is not available
+        router.push("/");
       }
     } catch (error) {
       setError("Google sign-in failed");
       setLoading(false);
     }
+    // Don't set loading to false here - let the redirect happen while loading
   };
 
   const roles = [
