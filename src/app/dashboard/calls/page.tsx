@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import VideoCall from '@/components/VideoCall';
+
 import '../../../styles/calls.scss';
 import '../../../styles/video-call.scss';
 
@@ -69,6 +70,7 @@ export default function CallsPage() {
   const [selectedReceiver, setSelectedReceiver] = useState('');
   const [loading, setLoading] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
+
   const [currentCall, setCurrentCall] = useState<Call | null>(null);
   const [calls, setCalls] = useState<Call[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
